@@ -3,7 +3,7 @@ import os
 
 app = Flask(__name__)
 
-app.config['FLASK_TITLE'] = ""
+app.config['FLASK_TITLE'] = "GitHub Copilot"
 
 # --- IN-MEMORY DATA STRUCTURES (Students will modify this area) ---
 # Phase 1: A simple Python List to store contacts
