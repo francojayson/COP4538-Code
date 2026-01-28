@@ -9,9 +9,28 @@
 </head>
 <body>
     <h1>{{ title }}Contact Manager</h1>
+    <!--In our /contacts route:
+    Generate a simple HTML page that displays each contact from the 
+    'contacts' list in an unordered list.  Also include a form to 
+    POST a new contact with an input named "name" 
+    -->
     
+    <ul>
+        {% for contact in contacts %}
+            <li>{{ contact }}</li>
+        {% endfor %}
+    </ul>
+
+
     <div style="background-color: #f0f0f0; padding: 15px;">
         <h3>Add New Contact</h3>
+
+        <!-- Copilot, create a form with a text input name "query" and a "Search" button -->
+        <form action="/search" method="GET">
+            <input type="text" name="query" placeholder="Enter contact name..." required>
+            <button type="submit">Search</button>
+        </form>
+
         <form action="/add" method="POST">
             <input type="text" name="name" placeholder="Name" required>
             <input type="email" name="email" placeholder="Email" required>
