@@ -3,7 +3,7 @@ import os
 
 app = Flask(__name__)
 
-app.config['FLASK_TITLE'] = "GitHub Copilot"
+app.config['FLASK_TITLE'] = "Jayson Franco "
 
 # --- IN-MEMORY DATA STRUCTURES (Students will modify this area) ---
 # Phase 1: A simple Python List to store contacts
@@ -13,6 +13,8 @@ contacts = []
 
 @app.route('/')
 def index():
+    # Change the Flask HTML Title to Jayson Franco
+    # Modify the title in the config above
     """
     Displays the main page.
     Eventually, students will pass their Linked List or Tree data here.
