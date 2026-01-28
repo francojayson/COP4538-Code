@@ -1,4 +1,5 @@
 # import time and create a start timer
+# This code measures the time taken to execute a loop of N iterations.
 
 import time
 
