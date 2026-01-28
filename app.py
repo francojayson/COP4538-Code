@@ -7,10 +7,11 @@ app.config['FLASK_TITLE'] = "Jayson Franco "
 
 # --- IN-MEMORY DATA STRUCTURES (Students will modify this area) ---
 # Phase 1: A simple Python List to store contacts
-contacts = ["Alice", 
-            "Bob",
-            "Charlie",
-            "Diana"] 
+contacts = [{"name": "Alice", "email": "alice@example.com"},
+            {"name": "Bob", "email": "bob@example.com"},
+            {"name": "Charlie", "email": "charlie@example.com"},
+            {"name": "Diana", "email": "diana@example.com"}
+            ]
 
 # Searches for a contact by name, ignoring case.
 # Returns the contact's name if found, otherwise returns None.
@@ -18,7 +19,7 @@ def find_contact_by_name(name):
     if not name:
         return None
     for contact in contacts:
-        if contact.lower() == name.lower():
+        if contact["name"].lower() == name.lower():
             return contact
     return None
 
@@ -58,7 +59,7 @@ def add_contact():
     new_name = request.form['name']
     
     # Phase 1 Logic: Append to list
-    contacts.append(new_name)
+    contacts.append({"name": new_name, "email": email})
 
     return redirect(url_for('index'))
 
