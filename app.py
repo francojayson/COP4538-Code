@@ -7,11 +7,12 @@ app.config['FLASK_TITLE'] = "Jayson Franco "
 
 # --- IN-MEMORY DATA STRUCTURES (Students will modify this area) ---
 # Phase 1: A simple Python List to store contacts
-contacts = [{"name": "Alice", "email": "alice@example.com"},
+# Class Node: Represents a node in a linked list
+
+contacts = LinkedList"name": "Alice", "email": "alice@example.com"},
             {"name": "Bob", "email": "bob@example.com"},
             {"name": "Charlie", "email": "charlie@example.com"},
-            {"name": "Diana", "email": "diana@example.com"}
-            ]
+            {"name": "Diana", "email": "diana@example.com"})
 
 # Searches for a contact by name, ignoring case.
 # Returns the contact's name if found, otherwise returns None.
