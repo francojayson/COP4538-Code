@@ -26,17 +26,29 @@
             <button type="submit">Search</button>
         </form>
 
+        <!--Add, created by my Sous Chef (Copilot)--> 
         <form action="/add" method="POST">
             <input type="text" name="name" placeholder="Name" required>
             <input type="email" name="email" placeholder="Email" required>
             <button type="submit">Add to Data Structure</button>
         </form>
+
+        <!-- Undo Button -->
+        <form action="/undo" method="POST" style="display: inline;">
+            <button type="submit">Undo Last Action</button>
+        </form>
+
     </div>
     <hr>
     <h3>Current Contacts (In-Memory)</h3>
     {% for contact in contacts %}
         <div class="card">
             <strong>{{ contact.name }}</strong> - {{ contact.email }}
+            <!--Delete-->
+            <form action="/delete" method="POST" style="display: inline;">
+                <input type="hidden" name="name" value="{{ contact.name }}">
+                <button type="submit">Delete</button>
+            </form>
         </div>
     {% else %}
         <p>No contacts found.</p>
