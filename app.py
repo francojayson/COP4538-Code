@@ -1,6 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for
 import os
 import copy
+from datetime import datetime # Session 7: For timestamping activity logs
+from collections import deque # Session 7: For efficient activity queue management
+
 
 app = Flask(__name__)
 
@@ -8,8 +11,29 @@ app.config['FLASK_TITLE'] = "Jayson Franco "
 
 # --- IN-MEMORY DATA STRUCTURES (Students will modify this area) ---
 # Phase 1: A simple Python List to store contacts
-# Class Node: Represents a node in a linked list
 
+# Create a Python class for a Queue data structure
+# It should have enqueue, dequeue, is_empty, and size methods
+
+class Queue:
+    def __init__(self):
+        self.data = []
+
+    def enqueue(self, item):
+        self.data.append(item)
+
+    def dequeue(self):
+        if not self.is_empty():
+            return self.data.pop(0) # Its at pop(0) because its a queue, FIFO
+        return None
+
+    def is_empty(self):
+        return len(self.data) == 0
+
+    def size(self):
+        return len(self.data)
+
+# Class Node: Represents a node in a linked list
 class Node:
     def __init__(self, data):
         self.data = data # Data stored in the node
@@ -109,6 +133,22 @@ actions_stack = Stack()  # Stack to track actions for Undo functionality
 undo_add_stack = Stack()  # Stack to track undone additions
 deleted_stack = Stack()    # Stack to track deleted contacts for Redo functionality
 
+# Redo stack is not implemented yet, but can be added similarly to the undo stacks if needed in future phases.
+redo_queue = deque()  # Redo queue uses deque for efficient appends and pops from both ends, if we implement redo functionality later
+
+# Queue for recent activity (FIFO)
+activity_queue = Queue()
+
+# Helper function to log messages to the activity queue
+def log_activity(message):
+    activity_queue.enqueue(message)
+    # Limit the queue size to the most recent 10 activities
+    while activity_queue.size() > 10:
+        activity_queue.dequeue()
+
+def clear_redo_queue():
+    redo_queue.clear()  # Session 7: Clear redo queue when a new action is performed after an undo, to maintain correct redo state
+
 #contacts = [{"name": "Alice", "email": "alice@example.com"},
 #            {"name": "Bob", "email": "bob@example.com"},
 #           {"name": "Charlie", "email": "charlie@example.com"},
@@ -130,6 +170,9 @@ def find_contact_by_name(name):
 def search_contact():
     query = request.args.get('query')
     result = find_contact_by_name(query)
+
+    log_activity(f"Search: {query} -> {'Found' if result else 'Not Found'}")
+
     if result:
         return f"Contact found: {result}"
     else:
@@ -146,7 +189,9 @@ def index():
     return render_template('index.html', 
                          contacts=contacts, 
                          title=app.config['FLASK_TITLE'],
-                         can_undo=(not actions_stack.is_empty())
+                         can_undo=(not actions_stack.is_empty()),
+                         can_redo=(len(redo_queue) > 0), # Session 7: Check if redo is possible
+                         activities=activity_queue.data #Pass queue data to template
                          )
 
 
@@ -166,12 +211,16 @@ def add_contact():
     if not name or not email:
         return redirect(url_for('index'))
     
+    clear_redo_queue() # Session 7: Clear redo queue when a new action is performed after an undo, to maintain correct redo state
+    
     # 1. snapshot before add
     undo_add_stack.push(contacts.clone())
     # 2. add new contact
     contacts.append({"name": name, "email": email})
     # 3. push action "A"dd to actions_stack
     actions_stack.push("A")
+
+    log_activity(f"Added contact: {name} ({email})") #Session 7 Activity Log
 
     return redirect(url_for('index'))
     
@@ -192,10 +241,14 @@ def delete_contact():
     name = request.form.get('name')
     removed = contacts.remove_by_name(name)
 
+    clear_redo_queue() # Session 7: Clear redo queue when a new action is performed after an undo, to maintain correct redo state
+
     if removed:
-        
         deleted_stack.push(removed)
         actions_stack.push("D")
+        log_activity(f"Deleted contact: {name}") #Session 7 Activity Log
+    else:
+        log_activity(f"Delete failed, (not found): {name}") #Session 7 Activity Log
 
     return redirect(url_for('index'))
 
@@ -207,6 +260,7 @@ def undo_action():
     last_action = actions_stack.pop()
 
     if last_action is None:
+        log_activity("Undo failed: No actions to undo") #Session 7 Activity Log
         return redirect(url_for('index'))
 
     if last_action == "A":
@@ -215,16 +269,49 @@ def undo_action():
 
         if previous_snapshot is not None:
             contacts = previous_snapshot
-            if previous_snapshot is not None:
-                contacts = previous_snapshot
+            redo_queue.append(("A", copy.deepcopy(contacts)))  # Optionally add to redo queue if implementing redo later
+            log_activity("Undo: reverted last add action") #Session 7 Activity Log
 
     elif last_action == "D":
-        # Undo Delete: Re-add the last deleted contact
+        # Un
         deleted = deleted_stack.pop()
 
         if deleted is not None  :
             contacts.append(deleted)
+            redo_queue.append(("D", copy.deepcopy(contacts)))  # Optionally add to redo queue if implementing redo later
+            log_activity(f"Undo: Restored deleted contact: {deleted['name']}") #Session 7 Activity Log
+    return redirect(url_for('index'))
 
+@app.route('/redo', methods=['POST'])
+def redo_action():
+    """
+    Endpoint to redo the last undone action.
+    """
+    if not redo_queue:
+        log_activity("Redo failed: No actions to redo") #Session 7 Activity Log
+        return redirect(url_for('index'))
+
+    action, contacts_snapshot = redo_queue.pop()
+
+    if action == "A":
+        # Redo Add: Restore from snapshot
+        global contacts
+        contacts = contacts_snapshot
+        actions_stack.push("A")
+        log_activity("Redo: restored last add action") #Session 7 Activity Log
+
+    elif action == "D":
+        removed = contacts.remove_by_name(contacts_snapshot.data[-1]["name"]) # Assuming the last contact in the snapshot is the one that was deleted
+        if removed:
+            actions_stack.push("D")
+            log_activity(f"Redo: Re-deleted contact: {removed['name']}") #Session 7 Activity Log
+        else:
+            log_activity(f"Redo failed: Contact to delete not found: {contacts_snapshot.data[-1]['name']}") #Session 7 Activity Log 
+            
+    return redirect(url_for('index'))
+                                                                                                    
+    # Logic to add grade will go here
+    log_activity("New grade added for student X") # Example log message
     return redirect(url_for('index'))
 
 # --- DATABASE CONNECTIVITY (For later phases) ---
