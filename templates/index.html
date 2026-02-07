@@ -40,24 +40,27 @@
     <!--Session 7 activity queue display -->
     <div class="activity">
         <h4>Recent Activity</h4>
-        <ul>
-            {% for activity in activities %}
-                <li>{{ activity }}</li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No recent activity yet.</p>
-    {% endfor %}
-      
+
+        {% if activities and activities|length > 0 %}
+            <ul>
+                {% for activity in activities %}
+                    <li>{{ activity }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No recent activity yet.</p>
+        {% endif %}
     </div>
+
     <hr>
+
     <h3>Current Contacts (In-Memory)</h3>
     {% for contact in contacts %}
         <div class="card">
-            <strong>{{ contact.name }}</strong> - {{ contact.email }}
-            <!--Delete-->
+            <strong>{{ contact["name"] }}</strong> - {{ contact["email"] }}
+
             <form action="/delete" method="POST" style="display: inline;">
-                <input type="hidden" name="name" value="{{ contact.name }}">
+                <input type="hidden" name="name" value="{{ contact["name"] }}">
                 <button type="submit">Delete</button>
             </form>
         </div>
