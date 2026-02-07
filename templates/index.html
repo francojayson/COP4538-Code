@@ -5,6 +5,8 @@
     <style>
         body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
         .card { border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; }
+        .activity { border: 1px dashed #aaa; padding: 10px; margin-bottom: 15px; background-color: #fafafa; }
+        .activity ul { margin: 0; padding-left: 20px; }
     </style>
 </head>
 <body>
@@ -14,8 +16,6 @@
     'contacts' list in an unordered list.  Also include a form to 
     POST a new contact with an input named "name" 
     -->
-    
-
 
     <div style="background-color: #f0f0f0; padding: 15px;">
         <h3>Add New Contact</h3>
@@ -37,7 +37,18 @@
         <form action="/undo" method="POST" style="display: inline;">
             <button type="submit">Undo Last Action</button>
         </form>
-
+    <!--Session 7 activity queue display -->
+    <div class="activity">
+        <h4>Recent Activity</h4>
+        <ul>
+            {% for activity in activities %}
+                <li>{{ activity }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No recent activity yet.</p>
+    {% endfor %}
+      
     </div>
     <hr>
     <h3>Current Contacts (In-Memory)</h3>
