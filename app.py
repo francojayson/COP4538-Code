@@ -282,7 +282,7 @@ def undo_action():
             contacts = previous_snapshot
 
             if last_added_contact is not None:
-                redo_queue.append(("A", copy.deepcopy(contacts)))  # Store snapshot after undo for redo
+                redo_queue.append(("A", copy.deepcopy(last_added_contact)))  # Store snapshot after undo for redo
 
             index_contacts() # Rebuild hash index after modification
             log_activity(f"Undo: Removed added contact: {last_added_contact['name']}") #Session 7 Activity Log
@@ -309,7 +309,7 @@ def redo_action():
         log_activity("Redo failed: No actions to redo") #Session 7 Activity Log
         return redirect(url_for('index'))
 
-    action, contacts_snapshot = redo_queue.pop() # *****Double check this line
+    action, contacts_snapshot = redo_queue.popleft() # *****Double check this line
 
     if action == "A":
         # Redo Add: Restore from snapshot
@@ -320,7 +320,7 @@ def redo_action():
         actions_stack.push("A")
 
         index_contacts() # Rebuild hash index after modification
-        log_activity(f"Redo: restored last add action: {contacts_snapshot[-1]['name']}") #Session 7 Activity Log
+        log_activity(f"Redo: restored last add action: {contacts_snapshot['name']}") #Session 7 Activity Log
 
     elif action == "D":
         if contacts_snapshot is None:
