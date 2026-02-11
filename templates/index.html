@@ -7,6 +7,10 @@
         .card { border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; }
         .activity { border: 1px dashed #aaa; padding: 10px; margin-bottom: 15px; background-color: #fafafa; }
         .activity ul { margin: 0; padding-left: 20px; }
+        .row { display: flex; gap: 10px; flex-wrap: wrap; }
+        button[disabled] { background-color: #ccc; cursor: not-allowed; }
+        form { margin-top: 10px; }
+
     </style>
 </head>
 <body>
@@ -33,10 +37,16 @@
             <button type="submit">Add to Data Structure</button>
         </form>
 
-        <!-- Undo Button -->
-        <form action="/undo" method="POST" style="display: inline;">
-            <button type="submit">Undo Last Action</button>
-        </form>
+        <!-- Undo undo + Redo -->
+         <div class="row">
+            <form action="/undo" method="POST" style="display: inline;">
+                <button type="submit" {% if not activities or activities|length == 0 %}disabled{% endif %}>Undo Last Action</button>
+            </form>
+
+            <form action="/redo" method="POST" style="display: inline;">
+                <button type="submit" {% if redo_queue|length == 0 %}disabled{% endif %}>Redo Last Action</button>
+            </form>
+        </div>
     <!--Session 7 activity queue display -->
     <div class="activity">
         <h4>Recent Activity</h4>
