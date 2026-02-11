@@ -40,11 +40,11 @@
         <!-- Undo undo + Redo -->
          <div class="row">
             <form action="/undo" method="POST" style="display: inline;">
-                <button type="submit" {% if not activities or activities|length == 0 %}disabled{% endif %}>Undo Last Action</button>
+                <button type="submit" {% if not can_undo %}disabled{% endif %}>Undo Last Action</button>
             </form>
 
             <form action="/redo" method="POST" style="display: inline;">
-                <button type="submit" {% if redo_queue|length == 0 %}disabled{% endif %}>Redo Last Action</button>
+                <button type="submit" {% if not can_redo %}disabled{% endif %}>Redo Last Action</button>
             </form>
         </div>
     <!--Session 7 activity queue display -->
