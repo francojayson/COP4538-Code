@@ -47,6 +47,11 @@
                 <button type="submit" {% if not can_redo %}disabled{% endif %}>Redo Last Action</button>
             </form>
         </div>
+    <!--create a form that sends a POST request to /sort-->
+    <form action="/sort" method="POST">
+        <button type="submit">Sort Alphabetically</button>
+    </form>
+    
     <!--Session 7 activity queue display -->
     <div class="activity">
         <h4>Recent Activity</h4>
