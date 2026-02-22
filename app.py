@@ -160,7 +160,35 @@ def find_contact_by_name(name):
         return None
     return contacts_index.get(name.lower()) # O(1) lookup using dictionary
 
+# Add insertion sort function from Session 9 here, to be used in the /sort route
+def insertion_sort(items): # Insertion sort algorithm for session 9
+    for i in range(1, len(items)):
+        key = items[i]
+        j = i - 1
+        while j >= 0 and key["name"].lower() < items[j]["name"].lower():
+            items[j + 1] = items[j]
+            j -= 1
+        items[j + 1] = key
+    return items
+
 # --- ROUTES ---
+
+# Add a sort route for session 9, which will sort the contacts alphabetically by name using insertion sort
+@app.route('/sort', methods=['POST'])
+def sort_contacts():
+    global contacts
+
+    clear_redo_queue() # Session 7: Clear redo queue when a new action is performed after an undo, to maintain correct redo state
+    contacts_list = [copy.deepcopy(c) for c in contacts]  # Convert linked list to a list for sorting
+    sorted_list = insertion_sort(contacts_list)
+    contacts = LinkedList()
+
+    for contact in sorted_list:
+        contacts.append(contact)
+    index_contacts()  # Rebuild hash index after sorting
+    log_activity("Sorted contacts alphabetically")
+
+    return redirect(url_for('index'))
 
 @app.route('/search')
 def search_contact():
@@ -302,44 +330,35 @@ def undo_action():
 
 @app.route('/redo', methods=['POST'])
 def redo_action():
-    """
-    Endpoint to redo the last undone action.
-    """
+    global contacts
+    
     if not redo_queue:
         log_activity("Redo failed: No actions to redo") #Session 7 Activity Log
         return redirect(url_for('index'))
 
     action, contacts_snapshot = redo_queue.popleft() # *****Double check this line
 
-    if action == "A":
-        # Redo Add: Restore from snapshot
-        if contacts_snapshot is None:
-            clear_redo_queue()  # Clear redo queue if snapshot is invalid
-            log_activity("Redo failed: Invalid snapshot for add action") #Session 7 Activity Log
-        contacts = contacts_snapshot
-        actions_stack.push("A")
+    if contacts_snapshot is None:
+        clear_redo_queue()  # Clear redo queue if snapshot is invalid
+        log_activity("Redo failed: Invalid snapshot") #Session 7 Activity Log
+        return redirect(url_for('index'))
 
+    if action == "A":
+        contacts.append(copy.deepcopy(contacts_snapshot))
+        actions_stack.push("A")
         index_contacts() # Rebuild hash index after modification
-        log_activity(f"Redo: restored last add action: {contacts_snapshot['name']}") #Session 7 Activity Log
+        log_activity(f"Redo: Re-added contact: {contacts_snapshot['name']}") #Session 7 Activity Log
 
     elif action == "D":
-        if contacts_snapshot is None:
-            clear_redo_queue()  # Clear redo queue if snapshot is invalid
-            log_activity("Redo failed: Invalid snapshot for delete action") #Session 7 Activity Log 
-            if os.remove is not None:
-                contacts.append(contacts_snapshot)
-                actions_stack.push("D")
-
-                index_contacts() # Rebuild hash index after modification
-                log_activity(f"Redo: restored last delete action: {contacts_snapshot['name']}") #Session 7 Activity Log
-            else:
-                log_activity("Redo failed: No contact to restore for delete action") #Session 7 Activity Log    
+        removed = contacts.remove_by_name(contacts_snapshot["name"])
+        if removed:
+            actions_stack.push("D")
+            index_contacts() # Rebuild hash index after modification
+            log_activity(f"Redo: Re-deleted contact: {contacts_snapshot['name']}") #Session 7 Activity Log
+        else:
+            log_activity(f"Redo failed: Contact not found for deletion: {contacts_snapshot['name']}") #Session 7 Activity Log
     return redirect(url_for('index'))
                                                                                                     
-    # Logic to add grade will go here
-    log_activity("New grade added for student X") # Example log message
-    return redirect(url_for('index'))
-
 # --- DATABASE CONNECTIVITY (For later phases) ---
 # Placeholders for students to fill in during Sessions 5 and 27
 def get_postgres_connection():
