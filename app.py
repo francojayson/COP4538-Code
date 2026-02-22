@@ -1,7 +1,7 @@
 from collections import deque
 from Quick_Sort import partition
 from flask import Flask, render_template, request, redirect, url_for
-import os
+# import os
 import copy
 
 app = Flask(__name__)
@@ -162,13 +162,23 @@ def find_contact_by_name(name):
     return contacts_index.get(name.lower()) # O(1) lookup using dictionary
 
 # Quick sort implementation from session 10 for sorting contacts by name
+def partition(arr, low, high):
+    pivot = arr[high]["name"].lower()  # Choosing the last element as pivot
+    
+    i = low - 1  # Pointer for the smaller element
+    for j in range(low, high):
+        if arr[j]["name"].lower() <= pivot:
+            i += 1
+            arr[i], arr[j] = arr[j], arr[i]  # Swap
+
+    arr[i + 1], arr[high] = arr[high], arr[i + 1]  # Swap the pivot element with the element at i+1
+    return i + 1
+
 def quick_sort(arr, low, high):
     if low < high:
         pi = partition(arr, low, high)
-
-        # Separately sort elements before and after partition Session 10
-        quick_sort(arr, low, pi - 1)    # Conquer the left half
-        quick_sort(arr, pi + 1, high)   # Conquer the right half
+        quick_sort(arr, low, pi - 1)
+        quick_sort(arr, pi + 1, high)
 
 # ---------------------------Session 9-------------------------------------------------------
 # Add insertion sort function from Session 9 here, to be used in the /sort route
