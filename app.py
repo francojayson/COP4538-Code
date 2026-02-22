@@ -1,4 +1,5 @@
 from collections import deque
+from Quick_Sort import partition
 from flask import Flask, render_template, request, redirect, url_for
 import os
 import copy
@@ -160,33 +161,48 @@ def find_contact_by_name(name):
         return None
     return contacts_index.get(name.lower()) # O(1) lookup using dictionary
 
+# Quick sort implementation from session 10 for sorting contacts by name
+def quick_sort(arr, low, high):
+    if low < high:
+        pi = partition(arr, low, high)
+
+        # Separately sort elements before and after partition Session 10
+        quick_sort(arr, low, pi - 1)    # Conquer the left half
+        quick_sort(arr, pi + 1, high)   # Conquer the right half
+
+# ---------------------------Session 9-------------------------------------------------------
 # Add insertion sort function from Session 9 here, to be used in the /sort route
-def insertion_sort(items): # Insertion sort algorithm for session 9
-    for i in range(1, len(items)):
-        key = items[i]
-        j = i - 1
-        while j >= 0 and key["name"].lower() < items[j]["name"].lower():
-            items[j + 1] = items[j]
-            j -= 1
-        items[j + 1] = key
-    return items
+#def insertion_sort(items): # Insertion sort algorithm for session 9
+#    for i in range(1, len(items)):
+#        key = items[i]
+#        j = i - 1
+#        while j >= 0 and key["name"].lower() < items[j]["name"].lower():
+#            items[j + 1] = items[j]
+#            j -= 1
+#        items[j + 1] = key
+#    return items
+# ---------------------------Session 9-------------------------------------------------------
 
 # --- ROUTES ---
 
-# Add a sort route for session 9, which will sort the contacts alphabetically by name using insertion sort
+# Add a sort route for session 9, which will sort the contacts alphabetically by name using Quick sort 
 @app.route('/sort', methods=['POST'])
 def sort_contacts():
     global contacts
 
     clear_redo_queue() # Session 7: Clear redo queue when a new action is performed after an undo, to maintain correct redo state
+    
     contacts_list = [copy.deepcopy(c) for c in contacts]  # Convert linked list to a list for sorting
-    sorted_list = insertion_sort(contacts_list)
-    contacts = LinkedList()
 
-    for contact in sorted_list:
+    if len(contacts_list) > 1:
+        quick_sort(contacts_list, 0, len(contacts_list) - 1)  # Sort the list using Quick sort from session 10
+   
+    contacts = LinkedList()
+    for contact in contacts_list:
         contacts.append(contact)
+
     index_contacts()  # Rebuild hash index after sorting
-    log_activity("Sorted contacts alphabetically")
+    log_activity("Sorted contacts alphabetically (Quick Sort)") #Session 7 Activity Log
 
     return redirect(url_for('index'))
 
