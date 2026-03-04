@@ -31,7 +31,7 @@
         </form>
 
         <!-- Session 13: Add a form to search by ID (Binary Search) "Start" -->
-        <form action="/search_by_id" method="GET">
+        <form action="/search_id" method="GET">
             <input type="number" name="id" placeholder="Search by ID (e.g., 1001)" required>
             <button type="submit">Search by ID</button>
         </form>
@@ -56,9 +56,11 @@
             </form>
         </div>
     <!--create a form that sends a POST request to /sort-->
-    <form action="/sort" method="POST">
-        <button type="submit">Sort Alphabetically</button>
-    </form>
+          <form action="/sort" method="POST">
+              <button type="submit">Sort Alphabetically</button>
+          </form>
+
+        </div>
     
     <!--Session 7 activity queue display -->
     <div class="activity">
@@ -80,8 +82,10 @@
     <h3>Current Contacts (In-Memory)</h3>
     {% for contact in contacts %}
         <div class="card">
-            <strong>{{ contact["name"] }}</strong> - {{ contact["email"] }}
-
+            <!--Show ID (Session 13)-->
+            <strong>ID: {{ contact.get("id", "N/A") }}</strong><br>
+            <strong>{{ contact.get("name", "N/A") }}</strong> - {{ contact["email"] }}
+            
             <form action="/delete" method="POST" style="display: inline;">
                 <input type="hidden" name="name" value="{{ contact["name"] }}">
                 <button type="submit">Delete</button>
