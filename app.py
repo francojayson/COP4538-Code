@@ -169,7 +169,7 @@ def clear_redo_queue():
     redo_queue.clear()  # Session 7: Clear redo queue when a new action is performed after an undo, to maintain correct redo state
 
 # Ensures ID then build index for O(1) search by name, call this after any modification to contacts
-ensure_id = () # Placeholder if we need to ensure IDs are assigned to existing contacts, can be implemented if needed
+ensure_ids() # Placeholder if we need to ensure IDs are assigned to existing contacts, can be implemented if needed
 index_contacts()  # Initial indexing of contacts
 
 
@@ -333,7 +333,7 @@ def add_contact():
     # ----------Session 13 start --------------------
     # Assign numeric ID to each new contact for Session 13 search by ID functionality
     
-    new_contact = {"ID": next_id, "name": name, "email": email}
+    new_contact = {"id": next_id, "name": name, "email": email}
     next_id += 1
 
     # ----------Session 13 end ----------------------
