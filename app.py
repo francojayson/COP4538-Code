@@ -136,7 +136,13 @@ def index_contacts():
     for contact in contacts:
         contacts_index[contact["name"].lower()] = contact
 
-index_contacts()  # Initial indexing of contacts
+# Session 13: Fixes the issue of missing IDs for existing contacts if we decide to implement ID search in Session 13, can be called after any modification to contacts to ensure all have IDs
+def ensure_ids():
+    global next_id
+    for c in contacts:
+        if "id" not in c:
+            c["id"] = next_id
+            next_id += 1
 
 # Undo/Redo: Three Stacks required by session 6 / Stacks.txt style
 actions_stack = Stack()      # Stack to track actions for Undo functionality
@@ -161,6 +167,11 @@ def log_activity(message):
 
 def clear_redo_queue():
     redo_queue.clear()  # Session 7: Clear redo queue when a new action is performed after an undo, to maintain correct redo state
+
+# Ensures ID then build index for O(1) search by name, call this after any modification to contacts
+ensure_id = () # Placeholder if we need to ensure IDs are assigned to existing contacts, can be implemented if needed
+index_contacts()  # Initial indexing of contacts
+
 
 # Search (O(1) using Hash Table) **Session 8**
 def find_contact_by_name(name): 
@@ -305,14 +316,8 @@ def index():
 
 @app.route('/add', methods=['POST'])
 def add_contact():
-    """
-    Endpoint to add a new contact.
-    Students will update this to insert into their Data Structure.
-    Add:
-    1. push snapshot before add
-    2. append new contact
-    3. push action "A"dd to actions_stack
-    """
+    global next_id # Session 13: Access the global next_id variable to assign unique IDs to new contacts
+
     name = request.form.get('name')
     email = request.form.get('email')
 
@@ -328,14 +333,14 @@ def add_contact():
     # ----------Session 13 start --------------------
     # Assign numeric ID to each new contact for Session 13 search by ID functionality
     
-    global next_id
-    new_contact = {"name": name, "email": email, "id": next_id}
+    new_contact = {"ID": next_id, "name": name, "email": email}
     next_id += 1
+
     # ----------Session 13 end ----------------------
 
 
     # 2. Perform the add operation (append to linked list and update hash table index)
-    new_contact = {"name": name, "email": email}
+    # Removed due to adding ID *new_contact = {"name": name, "email": email}*
     contacts.append(new_contact)
 
     # Remember exactly what was added
