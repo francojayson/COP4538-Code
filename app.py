@@ -121,13 +121,10 @@ contacts = LinkedList()
 
 # Add a numeric ID to each contact for Session 13 search by ID functionality
 contacts.append({"id": 1000, "name": "Alice", "email": "alice@example.com"})
-next_id += 1
-contacts.append({"id": next_id, "name": "Bob", "email": "bob@example.com"})
-next_id += 1
-contacts.append({"id": next_id, "name": "Charlie", "email": "charlie@example.com"})
-next_id += 1
-contacts.append({"id": next_id, "name": "Diana", "email": "diana@example.com"})
-next_id += 1
+contacts.append({"id": 1001, "name": "Bob", "email": "bob@example.com"})
+contacts.append({"id": 1002, "name": "Charlie", "email": "charlie@example.com"})
+contacts.append({"id": 1003, "name": "Diana", "email": "diana@example.com"})
+next_id = 1004  # Initialize next ID for new contacts
 
 # ---------------Session 13 End (ID Search)---------------------
 
@@ -266,7 +263,7 @@ def search_contact():
     # ------------------------ Routes Session 13 Start "search ID" ----------------------------
 @app.route('/search_id')
 def search_contact_by_id():
-    query = request.args.get('query', '') # ****Double Check this is the correct way to get query parameter in Flask****
+    query = request.args.get('id', '').strip() # Get the 'id' query parameter and remove any leading/trailing whitespace
     
     if not query.isdigit():
         log_activity(f"Search by ID failed: Invalid ID '{query}'") #Session 7 Activity Log
