@@ -83,7 +83,7 @@
     {% for contact in contacts %}
         <div class="card">
             <!--Show ID (Session 13)-->
-            <strong>ID: {{ contact.get("id", "N/A") }}</strong><br>
+            <strong>ID: {{ contact.get("id", "N/A") }}</strong> -
             <strong>{{ contact.get("name", "N/A") }}</strong> - {{ contact["email"] }}
             
             <form action="/delete" method="POST" style="display: inline;">
