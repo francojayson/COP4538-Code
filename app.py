@@ -1,5 +1,5 @@
 from collections import deque
-from Quick_Sort import partition
+# from Quick_Sort import partition
 from flask import Flask, render_template, request, redirect, url_for
 # import os
 import copy
@@ -113,13 +113,23 @@ class Stack:
     def size(self):
         return len(self.data)
 
-# Data + Index (Hash Table) **Session 8**
+# ----------Data + Index (Hash Table) **Session 8** --------
+
 contacts = LinkedList() 
 
-contacts.append({"name": "Alice", "email": "alice@example.com"})
-contacts.append({"name": "Bob", "email": "bob@example.com"})
-contacts.append({"name": "Charlie", "email": "charlie@example.com"})
-contacts.append({"name": "Diana", "email": "diana@example.com"})
+# ---------------Session 13 Start (ID Search)----------------
+
+# Add a numeric ID to each contact for Session 13 search by ID functionality
+contacts.append({"id": 1000, "name": "Alice", "email": "alice@example.com"})
+next_id += 1
+contacts.append({"id": next_id, "name": "Bob", "email": "bob@example.com"})
+next_id += 1
+contacts.append({"id": next_id, "name": "Charlie", "email": "charlie@example.com"})
+next_id += 1
+contacts.append({"id": next_id, "name": "Diana", "email": "diana@example.com"})
+next_id += 1
+
+# ---------------Session 13 End (ID Search)---------------------
 
 # Hash Table for indexing contacts by name (for O(1) search) **Session 8**
 contacts_index = {}
@@ -161,6 +171,30 @@ def find_contact_by_name(name):
         return None
     return contacts_index.get(name.lower()) # O(1) lookup using dictionary
 
+# ------------------------- Session 13 Start "Binary Search" ----------------------------
+
+# Binary search by ID for Session 13 search by ID functionality
+def binary_search_by_id(contacts_list, target_id):
+    low = 0
+    high = len(contacts_list) - 1
+
+    while low <= high:
+        mid = (low + high) // 2
+        guess_id = contacts_list[mid]["id"]
+
+        if guess_id == target_id:
+            return contacts_list[mid]
+        elif guess_id < target_id:
+            low = mid + 1
+        else:
+            high = mid - 1
+    
+    return None
+
+# -------------------------- Session 13 End "Binary Search" ----------------------------
+
+# --------------------Session 10 Quick Sort Implementation for sorting contacts by name-----------------------
+
 # Quick sort implementation from session 10 for sorting contacts by name
 def partition(arr, low, high):
     pivot = arr[high]["name"].lower()  # Choosing the last element as pivot
@@ -180,6 +214,7 @@ def quick_sort(arr, low, high):
         quick_sort(arr, low, pi - 1)
         quick_sort(arr, pi + 1, high)
 
+
 # ---------------------------Session 9-------------------------------------------------------
 # Add insertion sort function from Session 9 here, to be used in the /sort route
 #def insertion_sort(items): # Insertion sort algorithm for session 9
@@ -193,7 +228,7 @@ def quick_sort(arr, low, high):
 #    return items
 # ---------------------------Session 9-------------------------------------------------------
 
-# --- ROUTES ---
+# ---------------------------- ROUTES --------------------------------
 
 # Add a sort route for session 9, which will sort the contacts alphabetically by name using Quick sort 
 @app.route('/sort', methods=['POST'])
@@ -227,6 +262,32 @@ def search_contact():
         return f"Contact found: {result['name']} ({result['email']})"
     else:
         return "Contact not found."
+    
+    # ------------------------ Routes Session 13 Start "search ID" ----------------------------
+@app.route('/search_id')
+def search_contact_by_id():
+    query = request.args.get('query', '') # ****Double Check this is the correct way to get query parameter in Flask****
+    
+    if not query.isdigit():
+        log_activity(f"Search by ID failed: Invalid ID '{query}'") #Session 7 Activity Log
+        return "Invalid ID. Please enter a numeric ID."
+    
+    target_id = int(query)
+
+    # Convert Linkedlist to list, then ensure sorted by id for binary search
+    contacts_list = [c for c in contacts]  # Convert linked list to a list for searching
+    contacts_list.sort(key=lambda c: c["id"])  # Ensure the list is sorted by ID for binary search
+
+    result = binary_search_by_id(contacts_list, target_id)
+
+    log_activity(f"Search by ID: {query} -> {'Found' if result else 'Not Found'}") #Session 7 Activity Log
+
+    if result:
+        return f"Contact found: {result['name']} ({result['email']}) with ID {result['id']}"
+    
+    return "Contact not found."
+
+    # ------------------------ Routes Session 13 End "search ID" ----------------------------
 
 @app.route('/')
 def index():
@@ -265,6 +326,16 @@ def add_contact():
     
     # 1. snapshot before add
     undo_add_stack.push(contacts.clone())
+
+
+    # ----------Session 13 start --------------------
+    # Assign numeric ID to each new contact for Session 13 search by ID functionality
+    
+    global next_id
+    new_contact = {"name": name, "email": email, "id": next_id}
+    next_id += 1
+    # ----------Session 13 end ----------------------
+
 
     # 2. Perform the add operation (append to linked list and update hash table index)
     new_contact = {"name": name, "email": email}
