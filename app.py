@@ -201,9 +201,9 @@ def binary_search_by_id(contacts_list, target_id):
 
 # -------------------------- Session 13 End "Binary Search" ----------------------------
 
-# --------------------Session 10 Quick Sort Implementation for sorting contacts by name-----------------------
+# --------------------Session 10 Quick Sort Implementation for sorting contacts by name "Phase 3 Homework"-----------------------
 
-# Quick sort implementation from session 10 for sorting contacts by name
+# Quick sort implementation from session 10 for sorting contacts by name.
 def partition(arr, low, high):
     pivot = arr[high]["name"].lower()  # Choosing the last element as pivot
     
