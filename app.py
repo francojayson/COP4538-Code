@@ -1,6 +1,7 @@
 from collections import deque
 # from Quick_Sort import partition
 from flask import Flask, render_template, request, redirect, url_for
+from TreeNode import TreeNode
 # import os
 import copy
 
@@ -113,6 +114,25 @@ class Stack:
     def size(self):
         return len(self.data)
 
+# ----------TreeNode for Organizing Contacts by Category (Session 15)----------
+
+# Create all the nodes
+root = TreeNode("All Contacts")
+work = TreeNode("Work")
+personal = TreeNode("Personal")
+engineers = TreeNode("Engineers")
+hr = TreeNode("HR")
+
+# Link the children to their parents
+root.add_child(work)
+root.add_child(personal)
+
+work.add_child(engineers)
+work.add_child(hr)
+
+# ----------TreeNode for Organizing Contacts by Category (Session 15)----------
+
+
 # ----------Data + Index (Hash Table) **Session 8** --------
 
 contacts = LinkedList() 
@@ -120,11 +140,20 @@ contacts = LinkedList()
 # ---------------Session 13 Start (ID Search)----------------
 
 # Add a numeric ID to each contact for Session 13 search by ID functionality
-contacts.append({"id": 1000, "name": "Alice", "email": "alice@example.com"})
-contacts.append({"id": 1001, "name": "Bob", "email": "bob@example.com"})
-contacts.append({"id": 1002, "name": "Charlie", "email": "charlie@example.com"})
-contacts.append({"id": 1003, "name": "Diana", "email": "diana@example.com"})
-next_id = 1004  # Initialize next ID for new contacts
+# Add the Session 15 TreeNode organization to the initial contacts for demonstration, can be modified as needed
+contacts.append({"id": 1000, "name": "Alice", "email": "alice@example.com", "category": "Work", "subcategory": "Engineers"})
+contacts.append({"id": 1001, "name": "Bob", "email": "bob@example.com", "category": "Work", "subcategory": "HR"})
+contacts.append({"id": 1002, "name": "Charlie", "email": "charlie@example.com", "category": "Personal"})
+contacts.append({"id": 1003, "name": "Diana", "email": "diana@example.com", "category": "Work", "subcategory": "Engineers"})
+contacts.append({"id": 1004, "name": "Eve", "email": "eve@example.com", "category": "Personal"})
+contacts.append({"id": 1005, "name": "Frank", "email": "frank@example.com", "category": "Work", "subcategory": "HR"})
+contacts.append({"id": 1006, "name": "Grace", "email": "grace@example.com", "category": "Personal"})
+contacts.append({"id": 1007, "name": "Heidi", "email": "heidi@example.com", "category": "Personal"})
+contacts.append({"id": 1008, "name": "Ivan", "email": "ivan@example.com", "category": "Personal"})
+contacts.append({"id": 1009, "name": "Judy", "email": "judy@example.com", "category": "Personal"})
+contacts.append({"id": 1010, "name": "Karl", "email": "karl@example.com", "category": "Personal"})
+contacts.append({"id": 1011, "name": "Leo", "email": "leo@example.com", "category": "Personal"})
+next_id = 1012  # Initialize next ID for new contacts
 
 # ---------------Session 13 End (ID Search)---------------------
 
@@ -201,6 +230,39 @@ def binary_search_by_id(contacts_list, target_id):
 
 # -------------------------- Session 13 End "Binary Search" ----------------------------
 
+
+# --------------------Session 15: TreeNode Category Helper Function-----------------------
+
+def get_contacts_by_category(category_name):
+    # Returns all contacts in a specific category, case-insensitive match
+    return [c for c in contacts if c.get("category", "").lower() == category_name.lower()]
+
+def get_contacts_by_subcategory(category_name):
+    # Returns all contacts in a specific subcategory, case-insensitive match
+    return [c for c in contacts if c.get("subcategory", "").lower() == category_name.lower()]
+
+def get_node_by_name(node, name):
+    # Find a TreeNode by its data name, case-insensitive match
+    if node.data.lower() == name.lower():
+        return node
+    for child in node.children:
+        result = get_node_by_name(child, name)
+        if result:
+            return result
+    return None
+
+def get_all_contacts_under_node(node):
+    # Returns all contacts under a specific node and its children, based on category and subcategory
+    contacts_under_node = []
+    # Get direct contacts for this node
+    contacts_under_node.extend(get_contacts_by_category(node.data))
+    # Get contacts from child nodes
+    for child in node.children:
+        contacts_under_node.extend(get_all_contacts_under_node(child))
+    return contacts_under_node
+#--------------------Session 15: TreeNode Category Helper Function-----------------------
+
+
 # --------------------Session 10 Quick Sort Implementation for sorting contacts by name "Phase 3 Homework"-----------------------
 
 # Quick sort implementation from session 10 for sorting contacts by name.
@@ -235,6 +297,51 @@ def quick_sort(arr, low, high):
 #        items[j + 1] = key
 #    return items
 # ---------------------------Session 9-------------------------------------------------------
+
+# ---------------------------Session 16: Binary Search Tree (BST)-----------------------
+
+class BSTNode:
+    def __init__(self, contact):
+        self.contact = contact
+        self.left = None
+        self.right = None
+
+class ContactBST:
+    def __init__(self):
+        self.root = None
+
+    def insert(self, contact):
+        if self.root is None:
+            self.root = BSTNode(contact)
+        else:
+            self._insert_recursive(self.root, contact)
+
+    def _insert_recursive(self, node, contact):
+        if contact["name"].lower() < node.contact["name"].lower():
+            if node.left is None:
+                node.left = BSTNode(contact)
+            else:
+                self._insert_recursive(node.left, contact)
+        else:
+            if node.right is None:
+                node.right = BSTNode(contact)
+            else:
+                self._insert_recursive(node.right, contact)
+
+    def search(self, name):
+        return self._search_recursive(self.root, name)
+
+    def _search_recursive(self, node, name):
+        if node is None:
+            return None
+        if name.lower() == node.contact["name"].lower():
+            return node.contact
+        elif name.lower() < node.contact["name"].lower():
+            return self._search_recursive(node.left, name)
+        else:
+            return self._search_recursive(node.right, name)
+# ----------------------------Session 16: Binary Search Tree (BST)-------------------------
+
 
 # ---------------------------- ROUTES --------------------------------
 
