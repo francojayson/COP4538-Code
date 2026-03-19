@@ -42,6 +42,20 @@
         <form action="/add" method="POST">
             <input type="text" name="name" placeholder="Name" required>
             <input type="email" name="email" placeholder="Email" required>
+
+            <!-- Session 16: Tree Structure with Category and sub categories -->
+             <select name="category" required>
+                <option value="">Select Category</option>
+                <option value="Work">Work</option>
+                <option value="Personal">Personal</option>
+            </select>
+
+            <select name="subcategory">
+                <option value="">Select Subcategory (Optional)</option>
+                <option value="Engineers">Engineers</option>
+                <option value="HR">HR</option>
+            </select>
+
             <button type="submit">Add to Data Structure</button>
         </form>
 
@@ -94,5 +108,31 @@
     {% else %}
         <p>No contacts found.</p>
     {% endfor %}
+    
+    <hr>
+
+    <!-- Session 16: Tree Structure with Category and sub categories -->
+    <h3>Contacts by Category</h3>
+    
+    <!-- Work-->
+    <h4>Work</h4>
+    {% for contact in tree_contacts.get("Work", []) %}
+        <div class="card">
+            <strong>{{ contact.get("name", "N/A") }}</strong> - {{ contact["email"] }}
+        </div>
+    {% else %}
+        <p>No work contacts found.</p>
+    {% endfor %}
+
+    <!-- Personal -->
+    <h4>Personal</h4>
+    {% for contact in tree_contacts.get("Personal", []) %}
+        <div class="card">
+            <strong>{{ contact.get("name", "N/A") }}</strong> - {{ contact["email"] }}
+        </div>
+    {% else %}
+        <p>No personal contacts found.</p>
+    {% endfor %}
+
 </body>
 </html>
