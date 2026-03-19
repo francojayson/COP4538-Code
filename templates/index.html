@@ -100,6 +100,12 @@
             <strong>ID: {{ contact.get("id", "N/A") }}</strong> -
             <strong>{{ contact.get("name", "N/A") }}</strong> - {{ contact["email"] }}
             
+            <br>
+             <!-- Session 16: Display category and subcategory -->
+            <em>Category: {{ contact.get("category", "N/A") }}</em>
+            <em>Subcategory: {{ contact.get("subcategory", "N/A") }}</em>
+            <br>
+            
             <form action="/delete" method="POST" style="display: inline;">
                 <input type="hidden" name="name" value="{{ contact["name"] }}">
                 <button type="submit">Delete</button>
