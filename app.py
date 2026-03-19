@@ -256,10 +256,28 @@ def get_all_contacts_under_node(node):
     contacts_under_node = []
     # Get direct contacts for this node
     contacts_under_node.extend(get_contacts_by_category(node.data))
+
+    # Also allow subcategory matches for child nodes (e.g. if node is "Work", also get contacts with subcategory "Work")
+    contacts_under_node.extend(get_contacts_by_subcategory(node.data))
+
     # Get contacts from child nodes
     for child in node.children:
         contacts_under_node.extend(get_all_contacts_under_node(child))
     return contacts_under_node
+
+def build_tree_from_contacts(contacts):
+    tree_contacts = {
+        "Work": [],
+        "Personal": [], 
+    }
+
+    for contact in contacts:
+        category = contact.get("category", "")
+        if category in tree_contacts:
+            tree_contacts[category].append(contact)
+
+    return tree_contacts
+
 #--------------------Session 15: TreeNode Category Helper Function-----------------------
 
 
@@ -406,6 +424,10 @@ def search_contact_by_id():
 
 @app.route('/')
 def index():
+
+    # Session 16: Build the category tree and pass it to the template for display
+    tree_contacts = build_tree_from_contacts(contacts)
+
     # Change the Flask HTML Title to Jayson Franco
     # Modify the title in the config above
     """
@@ -418,6 +440,7 @@ def index():
                          can_undo=(not actions_stack.is_empty()),
                          can_redo=(len(redo_queue) > 0), # Session 7: Check if redo is possible
                          activities=activity_queue.data #Pass queue data to template
+                         tree_contacts=tree_contacts # Session 16: Pass the tree-structured contacts to the template for display
                          )
 
 
@@ -428,6 +451,10 @@ def add_contact():
     name = request.form.get('name')
     email = request.form.get('email')
 
+    # Session 16: Get category and subcategory from the form, default to empty string if not provided
+    category = request.form.get('category')
+    subcategory = request.form.get('subcategory', '')
+
     if not name or not email:
         return redirect(url_for('index'))
     
@@ -436,7 +463,15 @@ def add_contact():
     # 1. snapshot before add
     undo_add_stack.push(contacts.clone())
 
-
+    # Session 16: Save category and subcategory with the contact
+    new_contact = {
+        "id": next_id,  # Assign a unique ID to the new contact
+        "name": name,
+        "email": email,
+        "category": category,
+        "subcategory": subcategory
+    }
+    
     # ----------Session 13 start --------------------
     # Assign numeric ID to each new contact for Session 13 search by ID functionality
     
