@@ -439,7 +439,7 @@ def index():
                          title=app.config['FLASK_TITLE'],
                          can_undo=(not actions_stack.is_empty()),
                          can_redo=(len(redo_queue) > 0), # Session 7: Check if redo is possible
-                         activities=activity_queue.data #Pass queue data to template
+                         activities=activity_queue.data, #Pass queue data to template
                          tree_contacts=tree_contacts # Session 16: Pass the tree-structured contacts to the template for display
                          )
 
@@ -471,7 +471,7 @@ def add_contact():
         "category": category,
         "subcategory": subcategory
     }
-    
+
     # ----------Session 13 start --------------------
     # Assign numeric ID to each new contact for Session 13 search by ID functionality
     
