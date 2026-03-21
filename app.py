@@ -317,47 +317,84 @@ def quick_sort(arr, low, high):
 # ---------------------------Session 9-------------------------------------------------------
 
 # ---------------------------Session 16: Binary Search Tree (BST)-----------------------
-
-class BSTNode:
-    def __init__(self, contact):
-        self.contact = contact
+# Changing contact to category for the BSTNode, since we are building a category tree in Session 16, but this can be modified as needed if we want to store contacts directly in the BST instead of using TreeNode
+class CategoryBSTNode:
+    def __init__(self, category):
+        self.category = category
         self.left = None
         self.right = None
 
-class ContactBST:
+class CategoryBST:
     def __init__(self):
         self.root = None
 
-    def insert(self, contact):
+    def insert(self, category):
+        if not category:
+            return
+        
+        category = category.strip() # Remove leading/trailing whitespace
+        if category == "":
+            return
+        
         if self.root is None:
-            self.root = BSTNode(contact)
+            self.root = CategoryBSTNode(category)
         else:
-            self._insert_recursive(self.root, contact)
+            self._insert_recursive(self.root, category)
 
-    def _insert_recursive(self, node, contact):
-        if contact["name"].lower() < node.contact["name"].lower():
+    def _insert_recursive(self, node, category):
+        # Change: left < node < right rule from Session 16
+        if category.lower() < node.category.lower():
             if node.left is None:
-                node.left = BSTNode(contact)
+                node.left = CategoryBSTNode(category)
             else:
-                self._insert_recursive(node.left, contact)
-        else:
+                self._insert_recursive(node.left, category)
+        elif category.lower() > node.category.lower():
             if node.right is None:
-                node.right = BSTNode(contact)
+                node.right = CategoryBSTNode(category)
             else:
-                self._insert_recursive(node.right, contact)
-
-    def search(self, name):
-        return self._search_recursive(self.root, name)
-
-    def _search_recursive(self, node, name):
-        if node is None:
-            return None
-        if name.lower() == node.contact["name"].lower():
-            return node.contact
-        elif name.lower() < node.contact["name"].lower():
-            return self._search_recursive(node.left, name)
+                self._insert_recursive(node.right, category)
         else:
-            return self._search_recursive(node.right, name)
+            pass # Duplicate category, do nothing or handle as needed
+
+    def inorder(self):
+        categories = []
+        self._inorder_recursive(self.root, categories)
+        return categories
+    
+    def _inorder_recursive(self, node, categories):
+        if node is not None:
+            self._inorder_recursive(node.left, categories)
+            categories.append(node.category)
+            self._inorder_recursive(node.right, categories)
+
+    def search(self, category):
+        if not category:
+            return False
+        return self._search_recursive(self.root, category.strip().lower())
+
+    def _search_recursive(self, node, category):
+        if node is None:
+            return False
+        
+        current = node.category.lower()
+
+        if category == current:
+            return True
+        elif category.lower() < current:
+            return self._search_recursive(node.left, category)
+        else:
+            return self._search_recursive(node.right, category)
+        
+# Global function to build a BST from the categories in the contacts, can be called in the index route to build the tree for display
+category_bst = CategoryBST()
+
+def rebuild_category_bst():
+    global category_bst
+    category_bst = CategoryBST()  # Reset the BST
+
+    for contact in contacts:
+        category_bst.insert(contact.get("category", ""))  # Insert category into BST, can be modified to insert subcategory or other fields as needed
+
 # ----------------------------Session 16: Binary Search Tree (BST)-------------------------
 
 
@@ -380,6 +417,7 @@ def sort_contacts():
         contacts.append(contact)
 
     index_contacts()  # Rebuild hash index after sorting
+    rebuild_category_bst() # Session 16: Rebuild category BST after sorting, if we are using the BST for category organization
     log_activity("Sorted contacts alphabetically (Quick Sort)") #Session 7 Activity Log
 
     return redirect(url_for('index'))
@@ -425,6 +463,7 @@ def search_contact_by_id():
 @app.route('/')
 def index():
 
+    rebuild_category_bst() # Session 16: Rebuild category BST on each page load to ensure it reflects the current contacts, can be optimized if needed
     # Session 16: Build the category tree and pass it to the template for display
     tree_contacts = build_tree_from_contacts(contacts)
 
@@ -440,7 +479,8 @@ def index():
                          can_undo=(not actions_stack.is_empty()),
                          can_redo=(len(redo_queue) > 0), # Session 7: Check if redo is possible
                          activities=activity_queue.data, #Pass queue data to template
-                         tree_contacts=tree_contacts # Session 16: Pass the tree-structured contacts to the template for display
+                         tree_contacts=tree_contacts, # Session 16: Pass the tree-structured contacts to the template for display
+                         bst_categories=category_bst.inorder() # Session 16: Get sorted categories from the BST for display
                          )
 
 
@@ -452,8 +492,8 @@ def add_contact():
     email = request.form.get('email')
 
     # Session 16: Get category and subcategory from the form, default to empty string if not provided
-    category = request.form.get('category')
-    subcategory = request.form.get('subcategory', '')
+    category = request.form.get('category', '').strip()
+    subcategory = request.form.get('subcategory', '').strip()
 
     if not name or not email:
         return redirect(url_for('index'))
@@ -475,7 +515,7 @@ def add_contact():
     # ----------Session 13 start --------------------
     # Assign numeric ID to each new contact for Session 13 search by ID functionality
     
-    new_contact = {"id": next_id, "name": name, "email": email}
+    # REMOVED--new_contact = {"id": next_id, "name": name, "email": email}
     next_id += 1
 
     # ----------Session 13 end ----------------------
@@ -485,6 +525,9 @@ def add_contact():
     # Removed due to adding ID *new_contact = {"name": name, "email": email}*
     contacts.append(new_contact)
 
+    # Insert category into BST for Session 16, if category is provided
+    category_bst.insert(category) # Session 16: Insert category into BST for organization, can be modified to insert subcategory or other fields as needed
+
     # Remember exactly what was added
     added_contacts_stack.push(copy.deepcopy(new_contact))
 
@@ -493,7 +536,7 @@ def add_contact():
 
     # Rebuild hash index after modification
     index_contacts()
-
+    rebuild_category_bst() # Session 16: Rebuild category BST after addition, if we are using the BST for category organization
     log_activity(f"Added contact: {name} ({email})") #Session 7 Activity Log
     return redirect(url_for('index'))
     
@@ -525,6 +568,7 @@ def delete_contact():
         actions_stack.push("D")
 
         index_contacts() # Rebuild hash index after modification
+        rebuild_category_bst() # Session 16: Rebuild category BST after deletion, if we are using the BST for category organization
 
         log_activity(f"Deleted contact: {name}") #Session 7 Activity Log
     else:
@@ -554,6 +598,7 @@ def undo_action():
                 redo_queue.append(("A", copy.deepcopy(last_added_contact)))  # Store snapshot after undo for redo
 
             index_contacts() # Rebuild hash index after modification
+            rebuild_category_bst() # Session 16: Rebuild category BST after undoing an addition, if we are using the BST for category organization
             log_activity(f"Undo: Removed added contact: {last_added_contact['name']}") #Session 7 Activity Log
 
     elif last_action == "D":
@@ -566,6 +611,7 @@ def undo_action():
             redo_queue.append(("D", copy.deepcopy(deleted)))  # Store deleted contact for redo
            
             index_contacts() # Rebuild hash index after modification
+            rebuild_category_bst() # Session 16: Rebuild category BST after undoing a deletion, if we are using the BST for category organization
             log_activity(f"Undo: Restored deleted contact: {deleted['name']}") #Session 7 Activity Log
     return redirect(url_for('index'))
 
@@ -588,6 +634,7 @@ def redo_action():
         contacts.append(copy.deepcopy(contacts_snapshot))
         actions_stack.push("A")
         index_contacts() # Rebuild hash index after modification
+        rebuild_category_bst() # Session 16: Rebuild category BST after redoing an addition, if we are using the BST for category organization
         log_activity(f"Redo: Re-added contact: {contacts_snapshot['name']}") #Session 7 Activity Log
 
     elif action == "D":
@@ -595,6 +642,7 @@ def redo_action():
         if removed:
             actions_stack.push("D")
             index_contacts() # Rebuild hash index after modification
+            rebuild_category_bst() # Session 16: Rebuild category BST after redoing a deletion, if we are using the BST for category organization
             log_activity(f"Redo: Re-deleted contact: {contacts_snapshot['name']}") #Session 7 Activity Log
         else:
             log_activity(f"Redo failed: Contact not found for deletion: {contacts_snapshot['name']}") #Session 7 Activity Log
@@ -609,5 +657,6 @@ def get_mssql_connection():
     pass
 
 if __name__ == '__main__':
+    rebuild_category_bst() # Session 16: Build the category BST before starting the app, to ensure it's ready for use in the index route and other operations
     # Run the Flask app on port 5000, accessible externally
     app.run(host='0.0.0.0', port=5000, debug=True)
