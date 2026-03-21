@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+
     <title>{{ title }} - Contact Manager</title>
     <style>
         body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
@@ -11,9 +12,18 @@
         button[disabled] { background-color: #ccc; cursor: not-allowed; }
         form { margin-top: 10px; }
 
+        .bst-box {
+            border: 1px solid #333;
+            padding: 10px;
+            margin: 10px;
+            display: inline-block;
+            text-align: center;
+        }
+
     </style>
 </head>
 <body>
+
     <h1>{{ title }}Contact Manager</h1>
     <!--In our /contacts route:
     Generate a simple HTML page that displays each contact from the 
@@ -102,8 +112,9 @@
             
             <br>
              <!-- Session 16: Display category and subcategory -->
-            <em>Category: {{ contact.get("category", "N/A") }}</em>
+            <em>Category: {{ contact.get("category", "N/A") }}</em><br>
             <em>Subcategory: {{ contact.get("subcategory", "N/A") }}</em>
+           
             <br>
             
             <form action="/delete" method="POST" style="display: inline;">
@@ -139,6 +150,16 @@
     {% else %}
         <p>No personal contacts found.</p>
     {% endfor %}
+
+    <! --- Session 16: BST -->
+    <div class="bst-box">
+        <h3>Binary Search Tree Categories (In-Order Traversal)</h3>
+        {% for category in bst_categories %}
+            <p>{{ category }}</p>
+        {% else %}
+            <p>No categories found in BST.</p>
+        {% endfor %}
+    </div>
 
 </body>
 </html>
