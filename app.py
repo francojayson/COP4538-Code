@@ -203,7 +203,7 @@ contacts.append({
     "subcategory": "Engineers",
     "department": "Engineering",
     "team": "Platform",
-    "vip_Priority": 2
+    "emergency_priority": 2
 })
 
 contacts.append({
@@ -214,7 +214,7 @@ contacts.append({
     "subcategory": "HR",
     "department": "Human Resources",
     "team": "Recruitment",
-    "vip_Priority": 5
+    "emergency_priority": 5
 })
 
 contacts.append({
@@ -225,7 +225,7 @@ contacts.append({
     "subcategory": "Friends",
     "department": "Family",
     "team": "Immediate Family",
-    "vip_Priority": 1
+    "emergency_priority": 1
 
 })
 
@@ -237,7 +237,7 @@ contacts.append({
     "subcategory": "Engineers",
     "department": "Engineering",
     "team": "Security",
-    "vip_Priority": 3
+    "emergency_priority": 3
 })
 
 contacts.append({
@@ -248,7 +248,7 @@ contacts.append({
     "subcategory": "HR",
     "department": "HR",
     "team": "Payroll",
-    "vip_priority": 6
+    "emergency_priority": 6
 })
 contacts.append({
     "id": 1006,
@@ -258,7 +258,7 @@ contacts.append({
     "subcategory": "",
     "department": "Friends",
     "team": "College Friends",
-    "vip_priority": 7
+    "emergency_priority": 7
 })
 contacts.append({
     "id": 1007,
@@ -268,7 +268,7 @@ contacts.append({
     "subcategory": "",
     "department": "Friends",
     "team": "Neighborhood",
-    "vip_priority": 8
+    "emergency_priority": 8
 })
 contacts.append({
     "id": 1008,
@@ -278,7 +278,7 @@ contacts.append({
     "subcategory": "",
     "department": "Family",
     "team": "Extended Family",
-    "vip_priority": 9
+    "emergency_priority": 9
 })
 contacts.append({
     "id": 1009,
@@ -288,7 +288,7 @@ contacts.append({
     "subcategory": "",
     "department": "Friends",
     "team": "Travel Friends",
-    "vip_priority": 10
+    "emergency_priority": 10
 })
 contacts.append({
     "id": 1010,
@@ -298,7 +298,7 @@ contacts.append({
     "subcategory": "",
     "department": "Friends",
     "team": "Gym Friends",
-    "vip_priority": 11
+    "emergency_priority": 11
 })
 contacts.append({
     "id": 1011,
@@ -308,7 +308,7 @@ contacts.append({
     "subcategory": "",
     "department": "Friends",
     "team": "Gaming Friends",
-    "vip_priority": 12
+    "emergency_priority": 12
 })
 
 next_id = 1012  # Initialize next ID for new contacts
@@ -481,8 +481,8 @@ def normalize_contact_structure(contact):
     if "team" not in contact or not contact.get("team"):
         contact["team"] = "General"
 
-    if "vip_priority" not in contact:
-        contact["vip_priority"] = 999
+    if "emergency_priority" not in contact:
+        contact["emergency_priority"] = 999
 
 def get_category_path(contact):
     normalize_contact_structure(contact)
@@ -608,21 +608,21 @@ def rebuild_category_bst():
 
 # ----------------------------Session 16: Binary Search Tree (BST)-------------------------
 
-# -------------------------Homework 4 Requirement VIP Priority Queue (HEAP) BEGIN-------------------------
+# -------------------------Homework 4 Requirement Emergency Priority Queue (HEAP) BEGIN-------------------------
 
-class VIPPriorityQueue:
+class EmergencyPriorityQueue:
     def __init__(self):
         self.heap = []
 
     def push(self, contact):
-        normalize_contact_structure(contact)  # Ensure contact has vip_priority and other fields normalized
-        priority = int(contact.get("vip_priority", 999))  # Default to low priority if not specified
+        normalize_contact_structure(contact)  # Ensure contact has emergency_priority and other fields normalized
+        priority = int(contact.get("emergency_priority", 999))  # Default to low priority if not specified
         heapq.heappush(self.heap, (priority, contact["name"].lower(), contact["id"], copy.deepcopy(contact))) # Use a tuple to ensure proper ordering by priority, then name, then ID for tie-breaking
 
     def pop(self):
         if not self.heap:
             return None
-        return heapq.heappop(self.heap)[3]  # Return the contact with the highest priority (lowest vip_priority value)
+        return heapq.heappop(self.heap)[3]  # Return the contact with the highest priority (lowest emergency_priority value)
     
     def is_empty(self):
         return len(self.heap) == 0
@@ -633,17 +633,17 @@ class VIPPriorityQueue:
     def to_sorted_list(self):
         return [item[3] for item in sorted(self.heap)]
 
-vip_queue = VIPPriorityQueue()
+emergency_queue = EmergencyPriorityQueue()
 
-def rebuild_vip_queue():
-    global vip_queue
-    vip_queue = VIPPriorityQueue()  # Reset the VIP queue
+def rebuild_emergency_queue():
+    global emergency_queue
+    emergency_queue = EmergencyPriorityQueue()  # Reset the emergency queue
 
     for contact in contacts:
-        normalize_contact_structure(contact)  # Ensure contact structure is normalized before adding to VIP queue
-        vip_queue.push(contact)  # Add contact to VIP queue based on its vip_priority
+        normalize_contact_structure(contact)  # Ensure contact structure is normalized before adding to emergency queue
+        emergency_queue.push(contact)  # Add contact to emergency queue based on its emergency_priority
 
-# -------------------------Homework 4 Requirement VIP Priority Queue (HEAP) END-------------------------
+# -------------------------Homework 4 Requirement Emergency Priority Queue (HEAP) END-------------------------
 
 # -------------------------Homework 4 Category Tree Global BEGIN-----
 
@@ -662,7 +662,7 @@ def rebuild_all_structures():
     index_contacts()  # Rebuild hash index for O(1) search
     rebuild_category_bst()  # Rebuild category BST for organized display
     rebuild_category_tree()  # Rebuild category tree for organized display
-    rebuild_vip_queue()  # Rebuild VIP priority queue for VIP contact management
+    rebuild_emergency_queue()  # Rebuild emergency priority queue for emergency contact management
 
 rebuild_all_structures()  # Initial build of all structures based on the initial contacts
 
@@ -769,7 +769,7 @@ def index():
                          category_tree_contacts=category_tree.to_nested_dict(), # Session 16: Pass the category tree as a nested dictionary to the template for display
                          tree_contacts=tree_contacts_simple, # Session 16: Pass the tree-structured contacts to the template for display
                          bst_categories=category_bst.inorder(), # Session 16: Get sorted categories from the BST for display
-                         vip_contacts=vip_queue.to_sorted_list() # Session 16: Get VIP contacts sorted by priority for display
+                         emergency_contacts=emergency_queue.to_sorted_list() # Session 16: Get emergency contacts sorted by priority for display
                          )
 
 
@@ -787,18 +787,18 @@ def add_contact():
     # -----------------New BEGIN: add for homework 4 rquirements
     department = request.form.get('department', '').strip()
     team = request.form.get('team', '').strip()
-    vip_priority = request.form.get('vip_priority', '').strip()
+    emergency_priority = request.form.get('emergency_priority', '').strip()
 
     if not name or not email:
         return redirect(url_for('index'))
     
-    if vip_priority == "":
-        vip_priority = 999  # Default low priority if not provided
+    if emergency_priority == "":
+        emergency_priority = 999  # Default low priority if not provided
 
     try:
-        vip_priority = int(vip_priority)
+        emergency_priority = int(emergency_priority)
     except ValueError:
-        vip_priority = 999  # Default low priority if conversion fails
+        emergency_priority = 999  # Default low priority if conversion fails
 
     #-----------------New END: add for homework 4 requirements 
 
@@ -828,7 +828,7 @@ def add_contact():
         "subcategory": subcategory,
         "department": department,
         "team": team,
-        "vip_priority": vip_priority
+        "emergency_priority": emergency_priority
     }
 
     next_id += 1
@@ -841,7 +841,7 @@ def add_contact():
     log_activity(
         f"Added contact: {name} ({email}) | "
         f"Path: {new_contact['category']} > {new_contact['department']} > {new_contact['team']} | "
-        f"VIP Priority: {vip_priority}"
+        f"Emergency Priority: {emergency_priority}"
     )
 
     return redirect(url_for('index'))
