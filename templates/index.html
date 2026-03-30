@@ -52,7 +52,7 @@
             margin: 4px 0;
         }
 
-        .bst-box, .vip-box, .tree-box {
+        .bst-box, .emergency-box, .tree-box {
             border: 1px solid #333;
             padding: 12px;
             margin: 10px 0;
@@ -60,7 +60,7 @@
             background-color: #f9f9f9;
         }
 
-        .vip-card {
+        .emergency-card {
             border-left: 5px solid gold;
             background-color: #fffbea;
         }
@@ -137,7 +137,7 @@
              <!-- Homework 4 fields -->
             <input type="text" name="department" placeholder="Department (e.g., Engineering)">
             <input type="text" name="team" placeholder="Team (e.g., Platform)">
-            <input type="number" name="vip_priority" placeholder="VIP Priority (1 = highest)">
+            <input type="number" name="emergency_priority" placeholder="Emergency Priority (1 = highest)">
 
             <button type="submit">Add to Data Structure</button>
         </form>
@@ -161,13 +161,13 @@
 
         <hr>
 
-         <!-- VIP CONTACTS -->
-    <div class="vip-box">
-        <h3>VIP Contacts (Priority Queue / Heap)</h3>
+         <!-- Emergency CONTACTS -->
+    <div class="emergency-box">
+        <h3>Emergency Contacts (Priority Queue / Heap)</h3>
 
-        {% if vip_contacts and vip_contacts|length > 0 %}
-            {% for contact in vip_contacts %}
-                <div class="card vip-card">
+        {% if emergency_contacts and emergency_contacts|length > 0 %}
+            {% for contact in emergency_contacts %}
+                <div class="card emergency-card">
                     <strong>{{ contact.get("name", "N/A") }}</strong> - {{ contact.get("email", "N/A") }}<br>
                     <em>ID: {{ contact.get("id", "N/A") }}</em><br>
                     <em>Category Path:
@@ -177,11 +177,11 @@
                         >
                         {{ contact.get("team", "N/A") }}
                     </em><br>
-                    <em>VIP Priority: {{ contact.get("vip_priority", "N/A") }}</em>
+                    <em>Emergency Priority: {{ contact.get("emergency_priority", "N/A") }}</em>
                 </div>
             {% endfor %}
         {% else %}
-            <p>No VIP contacts found.</p>
+            <p>No Emergency contacts found.</p>
         {% endif %}
     </div>
     
@@ -214,7 +214,7 @@
             <em>Subcategory: {{ contact.get("subcategory", "N/A") }}</em><br>
             <em>Department: {{ contact.get("department", "N/A") }}</em><br>
             <em>Team: {{ contact.get("team", "N/A") }}</em><br>
-            <em>VIP Priority: {{ contact.get("vip_priority", "N/A") }}</em>
+            <em>Emergency Priority: {{ contact.get("emergency_priority", "N/A") }}</em>
 
             <br><br>
             
@@ -253,7 +253,7 @@
                                                 {{ contact.get("email", "N/A") }}
                                                 <br>
                                                 <em>ID: {{ contact.get("id", "N/A") }}</em><br>
-                                                <em>VIP Priority: {{ contact.get("vip_priority", "N/A") }}</em>
+                                                <em>Emergency Priority: {{ contact.get("emergency_priority", "N/A") }}</em>
                                             </div>
                                         {% endfor %}
                                     {% else %}
