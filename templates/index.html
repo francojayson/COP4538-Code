@@ -4,20 +4,83 @@
 
     <title>{{ title }} - Contact Manager</title>
     <style>
-        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        .card { border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; }
-        .activity { border: 1px dashed #aaa; padding: 10px; margin-bottom: 15px; background-color: #fafafa; }
-        .activity ul { margin: 0; padding-left: 20px; }
-        .row { display: flex; gap: 10px; flex-wrap: wrap; }
-        button[disabled] { background-color: #ccc; cursor: not-allowed; }
-        form { margin-top: 10px; }
+        body {
+            font-family: sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
 
-        .bst-box {
-            border: 1px solid #333;
+        .card {
+            border: 1px solid #ddd;
             padding: 10px;
-            margin: 10px;
-            display: inline-block;
-            text-align: center;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            background-color: #fff;
+        }
+
+        .activity {
+            border: 1px dashed #aaa;
+            padding: 10px;
+            margin-bottom: 15px;
+            background-color: #fafafa;
+            border-radius: 6px;
+        }
+
+        .activity ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button[disabled] {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        form {
+            margin-top: 10px;
+        }
+
+        input, select, button {
+            padding: 8px;
+            margin: 4px 0;
+        }
+
+        .bst-box, .vip-box, .tree-box {
+            border: 1px solid #333;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 6px;
+            background-color: #f9f9f9;
+        }
+
+        .vip-card {
+            border-left: 5px solid gold;
+            background-color: #fffbea;
+        }
+
+        .category-block {
+            margin-top: 15px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background-color: #fcfcfc;
+        }
+
+        .department-block {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        .team-block {
+            margin-left: 40px;
+            margin-top: 10px;
         }
 
     </style>
@@ -31,7 +94,7 @@
     POST a new contact with an input named "name" 
     -->
 
-    <div style="background-color: #f0f0f0; padding: 15px;">
+    <div style="background-color: #f0f0f0; padding: 15px; border-radius: 6px;">
         <h3>Add New Contact</h3>
 
         <!-- Copilot, create a form with a text input name "query" and a "Search" button -->
@@ -44,6 +107,11 @@
         <form action="/search_id" method="GET">
             <input type="number" name="id" placeholder="Search by ID (e.g., 1001)" required>
             <button type="submit">Search by ID</button>
+        </form>
+
+        <form action="/search_category" method="GET">
+            <input type="text" name="path" placeholder="Search category path (e.g., Work > Engineering > Platform)">
+            <button type="submit">Search Category Path</button>
         </form>
 
         <!-- Session 13: Add a form to search by ID (Binary Search) "End" -->
@@ -66,6 +134,11 @@
                 <option value="HR">HR</option>
             </select>
 
+             <!-- Homework 4 fields -->
+            <input type="text" name="department" placeholder="Department (e.g., Engineering)">
+            <input type="text" name="team" placeholder="Team (e.g., Platform)">
+            <input type="number" name="vip_priority" placeholder="VIP Priority (1 = highest)">
+
             <button type="submit">Add to Data Structure</button>
         </form>
 
@@ -85,6 +158,32 @@
           </form>
 
         </div>
+
+        <hr>
+
+         <!-- VIP CONTACTS -->
+    <div class="vip-box">
+        <h3>VIP Contacts (Priority Queue / Heap)</h3>
+
+        {% if vip_contacts and vip_contacts|length > 0 %}
+            {% for contact in vip_contacts %}
+                <div class="card vip-card">
+                    <strong>{{ contact.get("name", "N/A") }}</strong> - {{ contact.get("email", "N/A") }}<br>
+                    <em>ID: {{ contact.get("id", "N/A") }}</em><br>
+                    <em>Category Path:
+                        {{ contact.get("category", "N/A") }}
+                        >
+                        {{ contact.get("department", "N/A") }}
+                        >
+                        {{ contact.get("team", "N/A") }}
+                    </em><br>
+                    <em>VIP Priority: {{ contact.get("vip_priority", "N/A") }}</em>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No VIP contacts found.</p>
+        {% endif %}
+    </div>
     
     <!--Session 7 activity queue display -->
     <div class="activity">
@@ -106,16 +205,18 @@
     <h3>Current Contacts (In-Memory)</h3>
     {% for contact in contacts %}
         <div class="card">
-            <!--Show ID (Session 13)-->
             <strong>ID: {{ contact.get("id", "N/A") }}</strong> -
-            <strong>{{ contact.get("name", "N/A") }}</strong> - {{ contact["email"] }}
-            
+            <strong>{{ contact.get("name", "N/A") }}</strong> -
+            {{ contact.get("email", "N/A") }}
+
             <br>
-             <!-- Session 16: Display category and subcategory -->
             <em>Category: {{ contact.get("category", "N/A") }}</em><br>
-            <em>Subcategory: {{ contact.get("subcategory", "N/A") }}</em>
-           
-            <br>
+            <em>Subcategory: {{ contact.get("subcategory", "N/A") }}</em><br>
+            <em>Department: {{ contact.get("department", "N/A") }}</em><br>
+            <em>Team: {{ contact.get("team", "N/A") }}</em><br>
+            <em>VIP Priority: {{ contact.get("vip_priority", "N/A") }}</em>
+
+            <br><br>
             
             <form action="/delete" method="POST" style="display: inline;">
                 <input type="hidden" name="name" value="{{ contact["name"] }}">
@@ -128,38 +229,59 @@
     
     <hr>
 
-    <!-- Session 16: Tree Structure with Category and sub categories -->
-    <h3>Contacts by Category</h3>
-    
-    <!-- Work-->
-    <h4>Work</h4>
-    {% for contact in tree_contacts.get("Work", []) %}
-        <div class="card">
-            <strong>{{ contact.get("name", "N/A") }}</strong> - {{ contact["email"] }}
-        </div>
-    {% else %}
-        <p>No work contacts found.</p>
-    {% endfor %}
+     <!-- HOMEWORK 4 CATEGORY TREE -->
+    <div class="tree-box">
+        <h3>Contacts by Category Tree</h3>
 
-    <!-- Personal -->
-    <h4>Personal</h4>
-    {% for contact in tree_contacts.get("Personal", []) %}
-        <div class="card">
-            <strong>{{ contact.get("name", "N/A") }}</strong> - {{ contact["email"] }}
-        </div>
-    {% else %}
-        <p>No personal contacts found.</p>
-    {% endfor %}
+        {% if category_tree_contacts %}
+            {% for category_name, departments in category_tree_contacts.items() %}
+                <div class="category-block">
+                    <h4>{{ category_name }}</h4>
 
-    <! --- Session 16: BST -->
-    <div class="bst-box">
-        <h3>Binary Search Tree Categories (In-Order Traversal)</h3>
-        {% for category in bst_categories %}
-            <p>{{ category }}</p>
+                    {% for department_name, teams in departments.items() %}
+                        <div class="department-block">
+                            <h5>Department: {{ department_name }}</h5>
+
+                            {% for team_name, team_contacts in teams.items() %}
+                                <div class="team-block">
+                                    <h6>Team: {{ team_name }}</h6>
+
+                                    {% if team_contacts %}
+                                        {% for contact in team_contacts %}
+                                            <div class="card">
+                                                <strong>{{ contact.get("name", "N/A") }}</strong> -
+                                                {{ contact.get("email", "N/A") }}
+                                                <br>
+                                                <em>ID: {{ contact.get("id", "N/A") }}</em><br>
+                                                <em>VIP Priority: {{ contact.get("vip_priority", "N/A") }}</em>
+                                            </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <p>No contacts in this team.</p>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
         {% else %}
-            <p>No categories found in BST.</p>
-        {% endfor %}
+            <p>No category tree data found.</p>
+        {% endif %}
     </div>
 
+    <hr>
+
+    <! --- Session 16: BST Display --->
+    <div class="bst-box">
+        <h3>Binary Search Tree Categories (In-Order Traversal)</h3>
+        {% if bst_categories and bst_categories|length > 0 %}
+            {% for category in bst_categories %}
+                <p>{{ category }}</p>
+            {% endfor %}
+        {% else %}
+            <p>No categories found in BST.</p>
+        {% endif %}
+    </div>
 </body>
 </html>
