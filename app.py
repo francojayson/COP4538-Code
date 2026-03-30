@@ -4,6 +4,7 @@ from flask import Flask, render_template, request, redirect, url_for
 from TreeNode import TreeNode
 # import os
 import copy
+import heapq    # For priority queue implementation in Session 14, can be used if we decide to implement a more efficient priority queue using heapq instead of the simple list-based one provided in PriorityQueue.py
 
 app = Flask(__name__)
 app.config['FLASK_TITLE'] = "Jayson Franco "
@@ -117,6 +118,14 @@ class Stack:
 # ----------TreeNode for Organizing Contacts by Category (Session 15)----------
 
 # Create all the nodes
+class TreeNode:
+    def __init__(self, data):
+        self.data = data
+        self.children = []
+    
+    def add_child(self, child_node):
+        self.children.append(child_node)
+
 root = TreeNode("All Contacts")
 work = TreeNode("Work")
 personal = TreeNode("Personal")
@@ -132,28 +141,198 @@ work.add_child(hr)
 
 # ----------TreeNode for Organizing Contacts by Category (Session 15)----------
 
+# ----------Homework 4: Category Tree BEGIN----------
+
+class CategoryTreeNode:
+    def __init__(self, name):
+        self.name = name    
+        
+        self.children = {}  # Use a dictionary to store children for O(1) access by name
+
+        self.contacts = []  # List to store contacts that belong to this category/subcategory/department/team
+      
+    def add_child(self, child_name):
+        if child_name not in self.children:
+            self.children[child_name] = CategoryTreeNode(child_name)
+        return self.children[child_name]
+
+class CategoryTree:
+    def __init__(self):
+        self.root = CategoryTreeNode("All Contacts")
+
+    def clear(self):
+        self.root = CategoryTreeNode("All Contacts")
+
+    def insert_contact(self, contact):
+        category = contact.get("category", "").strip() or "Uncategorized"
+        department = contact.get("department", "").strip() or "General"
+        team = contact.get("team", "").strip() or "General"
+
+        category_node = self.root.add_child(CategoryTreeNode(category))
+        department_node = category_node.add_child(CategoryTreeNode(department))
+        team_node = department_node.add_child(CategoryTreeNode(team))
+
+        team_node.contacts.append(contact)
+
+    def to_nested_dict(self):
+        result = {}
+
+        for category_name, category_node in self.root.children.items():
+            result[category_name] = {}
+            for department_name, department_node in category_node.children.items():
+                result[category_name][department_name] = {}
+                for team_name, team_node in department_node.children.items():
+                    result[category_name][department_name][team_name] = team_node.contacts
+
+        return result
+    
+# ----------Homework 4: Category Tree END ----------
 
 # ----------Data + Index (Hash Table) **Session 8** --------
 
 contacts = LinkedList() 
 
+#---------------Homework 4 Requirements Start----------------
+# Adding more detailed contact information for Session 15 TreeNode organization and Session 13 ID search
+
+contacts.append({
+    "id": 1000, 
+    "name": "Alice", 
+    "email": "alice@example.com", 
+    "category": "Work", 
+    "subcategory": "Engineers",
+    "department": "Engineering",
+    "team": "Platform",
+    "vip_Priority": 2
+})
+
+contacts.append({
+    "id": 1001, 
+    "name": "Bob", 
+    "email": "bob@example.com", 
+    "category": "Work", 
+    "subcategory": "HR",
+    "department": "Human Resources",
+    "team": "Recruitment",
+    "vip_Priority": 5
+})
+
+contacts.append({
+    "id": 1002, 
+    "name": "Charlie", 
+    "email": "charlie@example.com", 
+    "category": "Personal",
+    "subcategory": "Friends",
+    "department": "Family",
+    "team": "Immediate Family",
+    "vip_Priority": 1
+
+})
+
+contacts.append({
+    "id": 1003, 
+    "name": "Diana", 
+    "email": "diana@example.com", 
+    "category": "Work",
+    "subcategory": "Engineers",
+    "department": "Engineering",
+    "team": "Security",
+    "vip_Priority": 3
+})
+
+contacts.append({
+    "id": 1005,
+    "name": "Frank",
+    "email": "frank@example.com",
+    "category": "Work",
+    "subcategory": "HR",
+    "department": "HR",
+    "team": "Payroll",
+    "vip_priority": 6
+})
+contacts.append({
+    "id": 1006,
+    "name": "Grace",
+    "email": "grace@example.com",
+    "category": "Personal",
+    "subcategory": "",
+    "department": "Friends",
+    "team": "College Friends",
+    "vip_priority": 7
+})
+contacts.append({
+    "id": 1007,
+    "name": "Heidi",
+    "email": "heidi@example.com",
+    "category": "Personal",
+    "subcategory": "",
+    "department": "Friends",
+    "team": "Neighborhood",
+    "vip_priority": 8
+})
+contacts.append({
+    "id": 1008,
+    "name": "Ivan",
+    "email": "ivan@example.com",
+    "category": "Personal",
+    "subcategory": "",
+    "department": "Family",
+    "team": "Extended Family",
+    "vip_priority": 9
+})
+contacts.append({
+    "id": 1009,
+    "name": "Judy",
+    "email": "judy@example.com",
+    "category": "Personal",
+    "subcategory": "",
+    "department": "Friends",
+    "team": "Travel Friends",
+    "vip_priority": 10
+})
+contacts.append({
+    "id": 1010,
+    "name": "Karl",
+    "email": "karl@example.com",
+    "category": "Personal",
+    "subcategory": "",
+    "department": "Friends",
+    "team": "Gym Friends",
+    "vip_priority": 11
+})
+contacts.append({
+    "id": 1011,
+    "name": "Leo",
+    "email": "leo@example.com",
+    "category": "Personal",
+    "subcategory": "",
+    "department": "Friends",
+    "team": "Gaming Friends",
+    "vip_priority": 12
+})
+
+next_id = 1012  # Initialize next ID for new contacts
+
+# --------------Homework 4 Requirements End----------------
+
+
 # ---------------Session 13 Start (ID Search)----------------
 
 # Add a numeric ID to each contact for Session 13 search by ID functionality
 # Add the Session 15 TreeNode organization to the initial contacts for demonstration, can be modified as needed
-contacts.append({"id": 1000, "name": "Alice", "email": "alice@example.com", "category": "Work", "subcategory": "Engineers"})
-contacts.append({"id": 1001, "name": "Bob", "email": "bob@example.com", "category": "Work", "subcategory": "HR"})
-contacts.append({"id": 1002, "name": "Charlie", "email": "charlie@example.com", "category": "Personal"})
-contacts.append({"id": 1003, "name": "Diana", "email": "diana@example.com", "category": "Work", "subcategory": "Engineers"})
-contacts.append({"id": 1004, "name": "Eve", "email": "eve@example.com", "category": "Personal"})
-contacts.append({"id": 1005, "name": "Frank", "email": "frank@example.com", "category": "Work", "subcategory": "HR"})
-contacts.append({"id": 1006, "name": "Grace", "email": "grace@example.com", "category": "Personal"})
-contacts.append({"id": 1007, "name": "Heidi", "email": "heidi@example.com", "category": "Personal"})
-contacts.append({"id": 1008, "name": "Ivan", "email": "ivan@example.com", "category": "Personal"})
-contacts.append({"id": 1009, "name": "Judy", "email": "judy@example.com", "category": "Personal"})
-contacts.append({"id": 1010, "name": "Karl", "email": "karl@example.com", "category": "Personal"})
-contacts.append({"id": 1011, "name": "Leo", "email": "leo@example.com", "category": "Personal"})
-next_id = 1012  # Initialize next ID for new contacts
+# contacts.append({"id": 1000, "name": "Alice", "email": "alice@example.com", "category": "Work", "subcategory": "Engineers"})
+# contacts.append({"id": 1001, "name": "Bob", "email": "bob@example.com", "category": "Work", "subcategory": "HR"})
+# contacts.append({"id": 1002, "name": "Charlie", "email": "charlie@example.com", "category": "Personal"})
+# contacts.append({"id": 1003, "name": "Diana", "email": "diana@example.com", "category": "Work", "subcategory": "Engineers"})
+#contacts.append({"id": 1004, "name": "Eve", "email": "eve@example.com", "category": "Personal"})
+#contacts.append({"id": 1005, "name": "Frank", "email": "frank@example.com", "category": "Work", "subcategory": "HR"})
+#contacts.append({"id": 1006, "name": "Grace", "email": "grace@example.com", "category": "Personal"})
+#contacts.append({"id": 1007, "name": "Heidi", "email": "heidi@example.com", "category": "Personal"})
+#contacts.append({"id": 1008, "name": "Ivan", "email": "ivan@example.com", "category": "Personal"})
+#contacts.append({"id": 1009, "name": "Judy", "email": "judy@example.com", "category": "Personal"})
+#contacts.append({"id": 1010, "name": "Karl", "email": "karl@example.com", "category": "Personal"})
+#contacts.append({"id": 1011, "name": "Leo", "email": "leo@example.com", "category": "Personal"})
+#next_id = 1012  # Initialize next ID for new contacts
 
 # ---------------Session 13 End (ID Search)---------------------
 
@@ -281,6 +460,38 @@ def build_tree_from_contacts(contacts):
 #--------------------Session 15: TreeNode Category Helper Function-----------------------
 
 
+# ----------Homework 4: Category Tree Helper Functions-----------------------
+
+def normalize_contact_structure(contact):
+    """
+    Keeps backward compatibility with existing contacts while allowing for new category/subcategory structure.
+    """
+    if "department" not in contact or not contact.get("department"):
+        subcategory = contact.get("subcategory", "").strip()
+        if subcategory == "Engineers":
+            contact["department"] = "Engineering"
+            contact["team"] = contact.get("team", "") or "General"
+        elif subcategory == "HR":
+             contact["department"] = "HR"
+             contact["team"] = contact.get("team", "") or "General"
+        else:
+            contact["department"] = "General"
+            contact["team"] = subcategory or "General"
+        
+    if "team" not in contact or not contact.get("team"):
+        contact["team"] = "General"
+
+    if "vip_priority" not in contact:
+        contact["vip_priority"] = 999
+
+def get_category_path(contact):
+    normalize_contact_structure(contact)
+    category = contact.get("category", "").strip() or "Uncategorized"
+    department = contact.get("department", "").strip() or "General"
+    team = contact.get("team", "").strip() or "General"
+    return f"{category} > {department} > {team}"
+
+
 # --------------------Session 10 Quick Sort Implementation for sorting contacts by name "Phase 3 Homework"-----------------------
 
 # Quick sort implementation from session 10 for sorting contacts by name.
@@ -397,6 +608,64 @@ def rebuild_category_bst():
 
 # ----------------------------Session 16: Binary Search Tree (BST)-------------------------
 
+# -------------------------Homework 4 Requirement VIP Priority Queue (HEAP) BEGIN-------------------------
+
+class VIPPriorityQueue:
+    def __init__(self):
+        self.heap = []
+
+    def push(self, contact):
+        normalize_contact_structure(contact)  # Ensure contact has vip_priority and other fields normalized
+        priority = int(contact.get("vip_priority", 999))  # Default to low priority if not specified
+        heapq.heappush(self.heap, (priority, contact["name"].lower(), contact["id"], copy.deepcopy(contact))) # Use a tuple to ensure proper ordering by priority, then name, then ID for tie-breaking
+
+    def pop(self):
+        if not self.heap:
+            return None
+        return heapq.heappop(self.heap)[3]  # Return the contact with the highest priority (lowest vip_priority value)
+    
+    def is_empty(self):
+        return len(self.heap) == 0
+    
+    def clear(self):
+        self.heap = []
+
+    def to_sorted_list(self):
+        return [item[3] for item in sorted(self.heap)]
+
+vip_queue = VIPPriorityQueue()
+
+def rebuild_vip_queue():
+    global vip_queue
+    vip_queue = VIPPriorityQueue()  # Reset the VIP queue
+
+    for contact in contacts:
+        normalize_contact_structure(contact)  # Ensure contact structure is normalized before adding to VIP queue
+        vip_queue.push(contact)  # Add contact to VIP queue based on its vip_priority
+
+# -------------------------Homework 4 Requirement VIP Priority Queue (HEAP) END-------------------------
+
+# -------------------------Homework 4 Category Tree Global BEGIN-----
+
+category_tree = CategoryTree()
+
+def rebuild_category_tree():
+    global category_tree
+    category_tree = CategoryTree()  # Reset the category tree
+
+    for contact in contacts:
+        normalize_contact_structure(contact)
+        category_tree.insert_contact(contact)
+
+def rebuild_all_structures():
+    ensure_ids()  # Ensure all contacts have IDs for consistency
+    index_contacts()  # Rebuild hash index for O(1) search
+    rebuild_category_bst()  # Rebuild category BST for organized display
+    rebuild_category_tree()  # Rebuild category tree for organized display
+    rebuild_vip_queue()  # Rebuild VIP priority queue for VIP contact management
+
+rebuild_all_structures()  # Initial build of all structures based on the initial contacts
+
 
 # ---------------------------- ROUTES --------------------------------
 
@@ -416,8 +685,7 @@ def sort_contacts():
     for contact in contacts_list:
         contacts.append(contact)
 
-    index_contacts()  # Rebuild hash index after sorting
-    rebuild_category_bst() # Session 16: Rebuild category BST after sorting, if we are using the BST for category organization
+    rebuild_all_structures() # Rebuild all structures after sorting to ensure they reflect the new order, can be optimized if needed
     log_activity("Sorted contacts alphabetically (Quick Sort)") #Session 7 Activity Log
 
     return redirect(url_for('index'))
@@ -434,7 +702,8 @@ def search_contact():
     else:
         return "Contact not found."
     
-    # ------------------------ Routes Session 13 Start "search ID" ----------------------------
+
+# ------------------------ Routes Session 13 Start "search ID" ----------------------------
 @app.route('/search_id')
 def search_contact_by_id():
     query = request.args.get('id', '').strip() # Get the 'id' query parameter and remove any leading/trailing whitespace
@@ -458,14 +727,32 @@ def search_contact_by_id():
     
     return "Contact not found."
 
-    # ------------------------ Routes Session 13 End "search ID" ----------------------------
+# ------------------------ Routes Session 13 End "search ID" ----------------------------
+
+# ---------------------- Routes Search the BST by Full Category path BEGIN----------------------------
+
+@app.route('/search_category')
+def search_category():
+    query = request.args.get('path', '').strip()
+
+    if not query:
+        return "Please provide a category path like: Work > Engineering > Platform"
+
+    exists = category_bst.search(query)
+    log_activity(f"Search category path: {query} -> {'Found' if exists else 'Not Found'}")
+
+    if exists:
+        return f"Category path found in BST: {query}"
+    return f"Category path not found in BST: {query}"
+
+# ----------------------- Routes Search the BST by Full Category path END----------------------------
 
 @app.route('/')
 def index():
 
-    rebuild_category_bst() # Session 16: Rebuild category BST on each page load to ensure it reflects the current contacts, can be optimized if needed
+    rebuild_all_structures() # Session 16: Rebuild category BST on each page load to ensure it reflects the current contacts, can be optimized if needed
     # Session 16: Build the category tree and pass it to the template for display
-    tree_contacts = build_tree_from_contacts(contacts)
+    tree_contacts_simple = build_tree_from_contacts(contacts)
 
     # Change the Flask HTML Title to Jayson Franco
     # Modify the title in the config above
@@ -479,8 +766,10 @@ def index():
                          can_undo=(not actions_stack.is_empty()),
                          can_redo=(len(redo_queue) > 0), # Session 7: Check if redo is possible
                          activities=activity_queue.data, #Pass queue data to template
-                         tree_contacts=tree_contacts, # Session 16: Pass the tree-structured contacts to the template for display
-                         bst_categories=category_bst.inorder() # Session 16: Get sorted categories from the BST for display
+                         category_tree_contacts=category_tree.to_nested_dict(), # Session 16: Pass the category tree as a nested dictionary to the template for display
+                         tree_contacts=tree_contacts_simple, # Session 16: Pass the tree-structured contacts to the template for display
+                         bst_categories=category_bst.inorder(), # Session 16: Get sorted categories from the BST for display
+                         vip_contacts=vip_queue.to_sorted_list() # Session 16: Get VIP contacts sorted by priority for display
                          )
 
 
@@ -488,20 +777,47 @@ def index():
 def add_contact():
     global next_id # Session 13: Access the global next_id variable to assign unique IDs to new contacts
 
-    name = request.form.get('name')
-    email = request.form.get('email')
+    name = request.form.get('name', '').strip()
+    email = request.form.get('email', '').strip()
 
     # Session 16: Get category and subcategory from the form, default to empty string if not provided
     category = request.form.get('category', '').strip()
     subcategory = request.form.get('subcategory', '').strip()
 
+    # -----------------New BEGIN: add for homework 4 rquirements
+    department = request.form.get('department', '').strip()
+    team = request.form.get('team', '').strip()
+    vip_priority = request.form.get('vip_priority', '').strip()
+
     if not name or not email:
         return redirect(url_for('index'))
     
+    if vip_priority == "":
+        vip_priority = 999  # Default low priority if not provided
+
+    try:
+        vip_priority = int(vip_priority)
+    except ValueError:
+        vip_priority = 999  # Default low priority if conversion fails
+
+    #-----------------New END: add for homework 4 requirements 
+
+
     clear_redo_queue() # Session 7: Clear redo queue when a new action is performed after an undo, to maintain correct redo state
     
     # 1. snapshot before add
     undo_add_stack.push(contacts.clone())
+
+    if not department:
+        if subcategory == "Engineers":
+            department = "Engineering"
+        elif subcategory == "HR":
+            department = "HR"
+        else:            
+            department = "General"
+
+    if not team:
+        team = "General"
 
     # Session 16: Save category and subcategory with the contact
     new_contact = {
@@ -509,40 +825,26 @@ def add_contact():
         "name": name,
         "email": email,
         "category": category,
-        "subcategory": subcategory
+        "subcategory": subcategory,
+        "department": department,
+        "team": team,
+        "vip_priority": vip_priority
     }
 
-    # ----------Session 13 start --------------------
-    # Assign numeric ID to each new contact for Session 13 search by ID functionality
-    
-    # REMOVED--new_contact = {"id": next_id, "name": name, "email": email}
     next_id += 1
-
-    # ----------Session 13 end ----------------------
-
-
-    # 2. Perform the add operation (append to linked list and update hash table index)
-    # Removed due to adding ID *new_contact = {"name": name, "email": email}*
     contacts.append(new_contact)
 
-    # Insert category into BST for Session 16, if category is provided
-    category_bst.insert(category) # Session 16: Insert category into BST for organization, can be modified to insert subcategory or other fields as needed
-
-    # Remember exactly what was added
     added_contacts_stack.push(copy.deepcopy(new_contact))
-
-    # 3. push action "A"dd to actions_stackand record action in activity log
     actions_stack.push("A")
 
-    # Rebuild hash index after modification
-    index_contacts()
-    rebuild_category_bst() # Session 16: Rebuild category BST after addition, if we are using the BST for category organization
-    log_activity(f"Added contact: {name} ({email})") #Session 7 Activity Log
+    rebuild_all_structures()
+    log_activity(
+        f"Added contact: {name} ({email}) | "
+        f"Path: {new_contact['category']} > {new_contact['department']} > {new_contact['team']} | "
+        f"VIP Priority: {vip_priority}"
+    )
+
     return redirect(url_for('index'))
-    
-    # Phase 1 Logic: Append to list
-    #Contacts.append({"name": name, "email": email})
-    #actions_stack.push(("add", contacts.copy())  
 
 @app.route('/delete', methods=['POST'])
 def delete_contact():
@@ -564,7 +866,7 @@ def delete_contact():
     removed = contacts.remove_by_name(name)
 
     if removed:
-        deleted_stack.push(removed)
+        deleted_stack.push(copy.deepcopy(removed))
         actions_stack.push("D")
 
         index_contacts() # Rebuild hash index after modification
@@ -606,8 +908,7 @@ def undo_action():
         deleted = deleted_stack.pop()
 
         if deleted is not None  :
-            contacts.append(deleted)
-
+            contacts.append(copy.deepcopy(deleted))
             redo_queue.append(("D", copy.deepcopy(deleted)))  # Store deleted contact for redo
            
             index_contacts() # Rebuild hash index after modification
@@ -633,17 +934,17 @@ def redo_action():
     if action == "A":
         contacts.append(copy.deepcopy(contacts_snapshot))
         actions_stack.push("A")
-        index_contacts() # Rebuild hash index after modification
-        rebuild_category_bst() # Session 16: Rebuild category BST after redoing an addition, if we are using the BST for category organization
+       
+        rebuild_all_structures() # Session 16: Rebuild all structures after redoing an addition, if we are using the BST for category organization
         log_activity(f"Redo: Re-added contact: {contacts_snapshot['name']}") #Session 7 Activity Log
 
     elif action == "D":
         removed = contacts.remove_by_name(contacts_snapshot["name"])
         if removed:
+            deleted_stack.push(copy.deepcopy(removed))  # Push the removed contact to the deleted stack for potential future undos
             actions_stack.push("D")
-            index_contacts() # Rebuild hash index after modification
-            rebuild_category_bst() # Session 16: Rebuild category BST after redoing a deletion, if we are using the BST for category organization
-            log_activity(f"Redo: Re-deleted contact: {contacts_snapshot['name']}") #Session 7 Activity Log
+            rebuild_all_structures() # Session 16: Rebuild all structures after redoing a deletion, if we are using the BST for category organization
+            log_activity(f"Redo: Deleted contact again: {contacts_snapshot['name']}") #Session 7 Activity Log
         else:
             log_activity(f"Redo failed: Contact not found for deletion: {contacts_snapshot['name']}") #Session 7 Activity Log
     return redirect(url_for('index'))
@@ -657,6 +958,6 @@ def get_mssql_connection():
     pass
 
 if __name__ == '__main__':
-    rebuild_category_bst() # Session 16: Build the category BST before starting the app, to ensure it's ready for use in the index route and other operations
+    rebuild_all_structures() # Session 16: Build the category BST before starting the app, to ensure it's ready for use in the index route and other operations
     # Run the Flask app on port 5000, accessible externally
     app.run(host='0.0.0.0', port=5000, debug=True)
