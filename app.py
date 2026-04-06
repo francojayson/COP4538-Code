@@ -339,6 +339,14 @@ next_id = 1012  # Initialize next ID for new contacts
 # Hash Table for indexing contacts by name (for O(1) search) **Session 8**
 contacts_index = {}
 
+# START: Session 22: Graph **Adjacency List**
+
+# Key = contact ID
+# Value = list of connected contact IDs (e.g. friends, colleagues, family connections, etc.)
+contact_graph = {}
+
+# END" Session 22: Graph **Adjacency List**
+
 def index_contacts():
     contacts_index.clear()
     for contact in contacts:
@@ -351,6 +359,64 @@ def ensure_ids():
         if "id" not in c:
             c["id"] = next_id
             next_id += 1
+
+# START: Session 22: Graph **Adjacency List** helper functions
+
+def find_contact_by_id(contact_id):
+    for contact in contacts:
+        if contact.get("id") == contact_id:
+            return contact
+    return None
+
+def ensure_graph_nodes():
+    for contact in contacts:
+        contact_id = contact.get("id")
+        if contact_id is not None and contact_id not in contact_graph:
+            contact_graph[contact_id] = []
+
+def add_connection(id1, id2):
+    ensure_graph_nodes()
+
+    if id1 == id2:
+        return False
+    
+    if id1 in contact_graph and id2 in contact_graph:
+        return False
+    
+    if id2 not in contact_graph[id1]:
+        contact_graph[id1].append(id2)
+
+    if id1 not in contact_graph[id2]:
+        contact_graph[id2].append(id1)
+
+    return True
+
+def remove_connection(id1, id2):
+    if id1 in contact_graph and id2 in contact_graph:
+        contact_graph[id1].remove(id2)
+
+    if id2 in contact_graph and id1 in contact_graph[id2]:
+        contact_graph[id2].remove(id1)
+
+def remove_contact_from_graph(contact_id):
+    if contact_id in contact_graph:
+        del contact_graph[contact_id]
+
+    for other_id, in contact_graph:
+        if contact_id in contact_graph[other_id]:
+            contact_graph[other_id].remove(contact_id)
+
+def get_connections_for_contact(contact_id):
+    connected_contacts = []
+    
+    for neighbor_id in contact_graph.get(contact_id, []):
+        neighbor = find_contact_by_id(neighbor_id)
+        if neighbor:
+            connected_contacts.append(neighbor)
+
+    return connected_contacts
+
+# END: Session 22: Graph **Adjacency List** helper functions
 
 # Undo/Redo: Three Stacks required by session 6 / Stacks.txt style
 actions_stack = Stack()      # Stack to track actions for Undo functionality
@@ -376,8 +442,12 @@ def log_activity(message):
 def clear_redo_queue():
     redo_queue.clear()  # Session 7: Clear redo queue when a new action is performed after an undo, to maintain correct redo state
 
+
 # Ensures ID then build index for O(1) search by name, call this after any modification to contacts
 ensure_ids() # Placeholder if we need to ensure IDs are assigned to existing contacts, can be implemented if needed
+
+# Graph Helpers for Session 22, can be used to manage relationships between contacts if we decide to implement this feature in a future phase
+
 index_contacts()  # Initial indexing of contacts
 
 
@@ -657,12 +727,35 @@ def rebuild_category_tree():
         normalize_contact_structure(contact)
         category_tree.insert_contact(contact)
 
+# START: Session 22: Graph
+
+def rebuild_contact_graph():
+    global contact_graph
+    
+    old_graph = copy.deepcopy(contact_graph)  # Keep a copy of the old graph to preserve existing connections if needed
+    contact_graph = {}  # Reset the graph
+
+    for contact in contacts:
+        contact_id = contact.get("id")
+        if contact_id is not None:
+            contact_graph[contact_id] = []
+
+    for contact_id, neighbors in old_graph.items():
+        if contact_id in contact_graph:
+            for neighbor_id in neighbors:
+                if neighbor_id in contact_graph and neighbor_id not in contact_graph[contact_id]:
+                    contact_graph[contact_id].append(neighbor_id)
+                    contact_graph[neighbor_id].append(contact_id)  # Ensure bidirectional connection
+
+# END: Session 22: Graph
+
 def rebuild_all_structures():
     ensure_ids()  # Ensure all contacts have IDs for consistency
     index_contacts()  # Rebuild hash index for O(1) search
     rebuild_category_bst()  # Rebuild category BST for organized display
     rebuild_category_tree()  # Rebuild category tree for organized display
     rebuild_emergency_queue()  # Rebuild emergency priority queue for emergency contact management
+    rebuild_contact_graph()  # Session 22: Rebuild graph structure
 
 rebuild_all_structures()  # Initial build of all structures based on the initial contacts
 
@@ -747,12 +840,58 @@ def search_category():
 
 # ----------------------- Routes Search the BST by Full Category path END----------------------------
 
+# START: Session 22: Graph Routes -------------------------------------------
+
+@app.route('/add_connection', methods=['POST'])
+def add_connection_route():
+    id1 = request.form.get('id1', '').strip()
+    id2 = request.form.get('id2', '').strip()
+
+    if not id1.isdigit() or not id2.isdigit():
+        log_activity("Add connection failed: invalid IDs")
+        return redirect(url_for('index'))
+    
+    id1 = int(id1)
+    id2 = int(id2)  
+
+    if add_connection(id1, id2):
+        log_activity(f"Added connection between ID {id1} and ID {id2}")
+    else:
+        log_activity(f"Add connection failed between ID {id1} and ID {id2}")
+    
+    return redirect(url_for('index'))
+
+@app.route('/remove_connection', methods=['POST'])
+def remove_connection_route():
+    id1 = request.form.get('id1', '').strip()
+    id2 = request.form.get('id2', '').strip()
+
+    if not id1.isdigit() or not id2.isdigit():
+        log_activity("Remove connection failed: invalid IDs")
+        return redirect(url_for('index'))
+
+    id1 = int(id1)
+    id2 = int(id2)
+
+    remove_connection(id1, id2)
+    log_activity(f"Removed connection between ID {id1} and ID {id2}")
+
+    return redirect(url_for('index'))
+
+# END: Session 22: Graph Routes ---------------------------------------------
+
 @app.route('/')
 def index():
 
     rebuild_all_structures() # Session 16: Rebuild category BST on each page load to ensure it reflects the current contacts, can be optimized if needed
     # Session 16: Build the category tree and pass it to the template for display
     tree_contacts_simple = build_tree_from_contacts(contacts)
+
+    graph_view = {}
+    for contact in contacts:
+        contact_id = contact.get("id")
+        if contact_id is not None:
+            graph_view[contact_id] = get_connections_for_contact(contact_id)
 
     # Change the Flask HTML Title to Jayson Franco
     # Modify the title in the config above
@@ -769,7 +908,8 @@ def index():
                          category_tree_contacts=category_tree.to_nested_dict(), # Session 16: Pass the category tree as a nested dictionary to the template for display
                          tree_contacts=tree_contacts_simple, # Session 16: Pass the tree-structured contacts to the template for display
                          bst_categories=category_bst.inorder(), # Session 16: Get sorted categories from the BST for display
-                         emergency_contacts=emergency_queue.to_sorted_list() # Session 16: Get emergency contacts sorted by priority for display
+                         emergency_contacts=emergency_queue.to_sorted_list(), # Session 16: Get emergency contacts sorted by priority for display
+                         graph_view=graph_view # Session 22: Pass the graph view data to the template
                          )
 
 
@@ -834,6 +974,9 @@ def add_contact():
     next_id += 1
     contacts.append(new_contact)
 
+    if new_contact["id"] not in contact_graph:
+        contact_graph[new_contact["id"]] = []  # Ensure new contact is added to the graph structure for Session 22, even if they have no connections yet
+
     added_contacts_stack.push(copy.deepcopy(new_contact))
     actions_stack.push("A")
 
@@ -866,11 +1009,11 @@ def delete_contact():
     removed = contacts.remove_by_name(name)
 
     if removed:
+        remove_contact_from_graph(removed["id"])  # Session 22: Remove the contact from the graph structure when deleted
         deleted_stack.push(copy.deepcopy(removed))
         actions_stack.push("D")
 
-        index_contacts() # Rebuild hash index after modification
-        rebuild_category_bst() # Session 16: Rebuild category BST after deletion, if we are using the BST for category organization
+        rebuild_all_structures() # Rebuild all structures after deletion to ensure they reflect the current state, can be optimized if needed
 
         log_activity(f"Deleted contact: {name}") #Session 7 Activity Log
     else:
@@ -899,8 +1042,7 @@ def undo_action():
             if last_added_contact is not None:
                 redo_queue.append(("A", copy.deepcopy(last_added_contact)))  # Store snapshot after undo for redo
 
-            index_contacts() # Rebuild hash index after modification
-            rebuild_category_bst() # Session 16: Rebuild category BST after undoing an addition, if we are using the BST for category organization
+            rebuild_all_structures() # Session 16: Rebuild all structures after undoing an addition, if we are using the BST for category organization
             log_activity(f"Undo: Removed added contact: {last_added_contact['name']}") #Session 7 Activity Log
 
     elif last_action == "D":
@@ -911,8 +1053,8 @@ def undo_action():
             contacts.append(copy.deepcopy(deleted))
             redo_queue.append(("D", copy.deepcopy(deleted)))  # Store deleted contact for redo
            
-            index_contacts() # Rebuild hash index after modification
-            rebuild_category_bst() # Session 16: Rebuild category BST after undoing a deletion, if we are using the BST for category organization
+            rebuild_all_structures() # Rebuild all structures after modification
+           
             log_activity(f"Undo: Restored deleted contact: {deleted['name']}") #Session 7 Activity Log
     return redirect(url_for('index'))
 
