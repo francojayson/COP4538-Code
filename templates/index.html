@@ -52,7 +52,7 @@
             margin: 4px 0;
         }
 
-        .bst-box, .emergency-box, .tree-box {
+        .bst-box, .emergency-box, .tree-box, .graph-box {
             border: 1px solid #333;
             padding: 12px;
             margin: 10px 0;
@@ -157,6 +157,21 @@
               <button type="submit">Sort Alphabetically</button>
           </form>
 
+                    <!-- Session 22: Graph Connection Display -->
+                     <div class="graph-box">
+                        <h3>Manage Contact Connections (Graph)</h3>
+
+                        <form action="/add_connection" method="POST">
+                            <input type="number" name="id1" placeholder="Contact ID 1" required>
+                            <input type="number" name="id2" placeholder="Contact ID 2" required>
+                            <button type="submit">Add Connection</button>
+                        </form>
+
+                        <form action="/remove_connection" method="POST">
+                            <input type="number" name="id1" placeholder="Contact ID 1" required>
+                            <input type="number" name="id2" placeholder="Contact ID 2" required>
+                            <button type="submit">Remove Connection</button>
+
         </div>
 
         <hr>
@@ -217,7 +232,20 @@
             <em>Emergency Priority: {{ contact.get("emergency_priority", "N/A") }}</em>
 
             <br><br>
-            
+            <strong>Connections:</strong>
+            <ul>
+                {% if graph_view.get(contact.get("id")) %}
+                    {% for connected in graph_view.get(contact.get("id"), []) %}
+                        <li>
+                            {{ connected.get("name", "N/A") }} -
+                            (ID: {{ connected.get("id", "N/A") }})
+                        </li>
+                    {% endfor %}
+                {% else %}
+                    <li>No connections</li>
+                {% endif %}
+            </ul>
+
             <form action="/delete" method="POST" style="display: inline;">
                 <input type="hidden" name="name" value="{{ contact["name"] }}">
                 <button type="submit">Delete</button>
@@ -229,6 +257,34 @@
     
     <hr>
 
+        <div class="graph-box">
+            <h3>Graph Connections Overview</h3>
+            {% of contacts %}
+                {% for contact in contacts %}
+                <div class="card">
+                    <strong>{{ contact.get("name", "N/A") }}</strong>
+                    (ID: {{ contact.get("id", "N/A") }})
+                    <ul>
+                        {% if graph_view.get(contact.get("id"), []) %}
+                            {% for connected in graph_view.get(contact.get("id"), []) %}
+                                <li>
+                                    {{ connected.get("name", "N/A") }}
+                                    (ID: {{ connected.get("id", "N/A") }})
+                                </li>
+                            {% endfor %}
+                        {% else %}
+                            <li>No connections</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No graph data available.</p>
+        {% endif %}
+    </div>
+
+    <hr>
+    
      <!-- HOMEWORK 4 CATEGORY TREE -->
     <div class="tree-box">
         <h3>Contacts by Category Tree</h3>
