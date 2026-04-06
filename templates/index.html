@@ -259,7 +259,7 @@
 
         <div class="graph-box">
             <h3>Graph Connections Overview</h3>
-            {% of contacts %}
+            {% if contacts %}
                 {% for contact in contacts %}
                 <div class="card">
                     <strong>{{ contact.get("name", "N/A") }}</strong>
