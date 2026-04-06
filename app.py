@@ -385,7 +385,7 @@ def add_connection(id1, id2):
     if id1 == id2:
         return False
     
-    if id1 not in friendship_graph and id2 not in friendship_graph:
+    if id1 not in friendship_graph or id2 not in friendship_graph:
         return False
     
     if id2 not in friendship_graph[id1]:
@@ -397,7 +397,7 @@ def add_connection(id1, id2):
     return True
 
 def remove_connection(id1, id2):
-    if id1 in friendship_graph and id2 in friendship_graph[id]:
+    if id1 in friendship_graph and id2 in friendship_graph[id1]:
         friendship_graph[id1].remove(id2)
 
     if id2 in friendship_graph and id1 in friendship_graph[id2]:
@@ -422,6 +422,58 @@ def get_connections_for_contact(contact_id):
     return connected_contacts
 
 # END: Session 22: Graph **Adjacency List** helper functions
+
+# START: Session 23: BFS Connection Finder
+
+def bfs_connection_path(start_id, target_id):
+    ensure_graph_nodes()
+
+    if start_id not in friendship_graph or target_id not in friendship_graph:
+        return None
+    
+    if start_id == target_id:
+        return [start_id]
+    
+    visited = set()
+    queue = deque()
+
+    # Store whole paths in the queue
+    queue.append([start_id])
+    visited.add(start_id)
+
+    while queue:
+        current_path = queue.popleft()
+        current_node = current_path[-1]
+
+        for neighbor in friendship_graph.get(current_node, []):
+            if neighbor not in visited:
+                new_path = current_path + [neighbor]
+
+                if neighbor == target_id:
+                    return new_path
+                
+                visited.add(neighbor)
+                queue.append(new_path)
+
+    return None
+
+def get_degrees_of_separation(start_id, target_id):
+    """
+    Return the number of edges between two contacts.
+    Example:
+    [1000, 1001, 1005] -> 2 degree of separation
+    [1000, 1003] -> 1 degree of separation
+    [1000] -> 0 degree of separation (same contact)
+    """
+    path = bfs_connection_path(start_id, target_id)
+
+    if path is None:
+        return None  # No connection found
+
+    return len(path) - 1  # Number of edges is one less than the number of nodes in the path
+
+# END: Session 23: BFS Connection Finder
+
 
 # Undo/Redo: Three Stacks required by session 6 / Stacks.txt style
 actions_stack = Stack()      # Stack to track actions for Undo functionality
@@ -886,6 +938,51 @@ def remove_connection_route():
     return redirect(url_for('index'))
 
 # END: Session 22: Graph Routes ---------------------------------------------
+
+# START: Session 23: BFS Connection Finder Route ---------------------------------------------
+
+@app.route('/find_connection')
+def find_connection():
+    id1 = request.args.get('id1', '').strip()
+    id2 = request.args.get('id2', '').strip()
+
+    if not id1.isdigit() or not id2.isdigit():
+        log_activity("Find connection failed: invalid IDs")
+        return "Invalid IDs. Please enter numeric IDs."
+
+    start_id = int(id1)
+    target_id = int(id2)
+
+    path = bfs_connection_path(start_id, target_id)
+
+    if path is None:
+        log_activity(f"No connection found between ID {start_id} and ID {target_id}")
+        return f"No connection found between ID {start_id} and ID {target_id}."
+    
+    degrees = len(path) - 1
+
+    path_contacts = []
+    for contact_id in path:
+        contact = find_contact_by_id(contact_id)
+        if contact:
+            path_contacts.append(f"{contact['name']} (ID: {contact['id']})")
+        else:
+            path_contacts.append(f"Unknown Contact (ID: {contact_id})")
+
+    path_string = " -> ".join(path_contacts)
+
+    log_activity(
+        f"Found connection path between ID {start_id} and ID {target_id} "
+        f"with {degrees} degree(s) of separation"
+    )
+
+    return (
+        f"Connection path found: {path_string}<br>"
+        f"Degrees of Separation: {degrees}"
+    )
+
+# END: Session 23: BFS Connection Finder Route ---------------------------------------------
+
 
 @app.route('/')
 def index():
