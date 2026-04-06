@@ -343,7 +343,12 @@ contacts_index = {}
 
 # Key = contact ID
 # Value = list of connected contact IDs (e.g. friends, colleagues, family connections, etc.)
-contact_graph = {}
+friendship_graph = {
+    1000: [1001, 1003],  # Alice is connected to Bob and Diana
+    1001: [1000, 1005],  # Bob is connected to Alice and Frank
+    1003: [1000],       # Diana is connected to Alice
+    1005: [1001]       # Frank is connected to Bob
+}
 
 # END" Session 22: Graph **Adjacency List**
 
@@ -371,8 +376,8 @@ def find_contact_by_id(contact_id):
 def ensure_graph_nodes():
     for contact in contacts:
         contact_id = contact.get("id")
-        if contact_id is not None and contact_id not in contact_graph:
-            contact_graph[contact_id] = []
+        if contact_id is not None and contact_id not in friendship_graph:
+            friendship_graph[contact_id] = []
 
 def add_connection(id1, id2):
     ensure_graph_nodes()
@@ -380,36 +385,36 @@ def add_connection(id1, id2):
     if id1 == id2:
         return False
     
-    if id1 in contact_graph and id2 in contact_graph:
+    if id1 not in friendship_graph and id2 not in friendship_graph:
         return False
     
-    if id2 not in contact_graph[id1]:
-        contact_graph[id1].append(id2)
+    if id2 not in friendship_graph[id1]:
+        friendship_graph[id1].append(id2)
 
-    if id1 not in contact_graph[id2]:
-        contact_graph[id2].append(id1)
+    if id1 not in friendship_graph[id2]:
+        friendship_graph[id2].append(id1)
 
     return True
 
 def remove_connection(id1, id2):
-    if id1 in contact_graph and id2 in contact_graph:
-        contact_graph[id1].remove(id2)
+    if id1 in friendship_graph and id2 in friendship_graph[id]:
+        friendship_graph[id1].remove(id2)
 
-    if id2 in contact_graph and id1 in contact_graph[id2]:
-        contact_graph[id2].remove(id1)
+    if id2 in friendship_graph and id1 in friendship_graph[id2]:
+        friendship_graph[id2].remove(id1)
 
 def remove_contact_from_graph(contact_id):
-    if contact_id in contact_graph:
-        del contact_graph[contact_id]
+    if contact_id in friendship_graph:
+        del friendship_graph[contact_id]
 
-    for other_id, in contact_graph:
-        if contact_id in contact_graph[other_id]:
-            contact_graph[other_id].remove(contact_id)
+    for other_id in friendship_graph:
+        if contact_id in friendship_graph[other_id]:
+            friendship_graph[other_id].remove(contact_id)
 
 def get_connections_for_contact(contact_id):
     connected_contacts = []
     
-    for neighbor_id in contact_graph.get(contact_id, []):
+    for neighbor_id in friendship_graph.get(contact_id, []):
         neighbor = find_contact_by_id(neighbor_id)
         if neighbor:
             connected_contacts.append(neighbor)
@@ -729,23 +734,25 @@ def rebuild_category_tree():
 
 # START: Session 22: Graph
 
-def rebuild_contact_graph():
-    global contact_graph
+def rebuild_friendship_graph():
+    global friendship_graph
     
-    old_graph = copy.deepcopy(contact_graph)  # Keep a copy of the old graph to preserve existing connections if needed
-    contact_graph = {}  # Reset the graph
+    old_graph = copy.deepcopy(friendship_graph)  # Keep a copy of the old graph to preserve existing connections if needed
+    friendship_graph = {}  # Reset the graph
 
     for contact in contacts:
         contact_id = contact.get("id")
         if contact_id is not None:
-            contact_graph[contact_id] = []
+            friendship_graph[contact_id] = []
 
     for contact_id, neighbors in old_graph.items():
-        if contact_id in contact_graph:
+        if contact_id in friendship_graph:
             for neighbor_id in neighbors:
-                if neighbor_id in contact_graph and neighbor_id not in contact_graph[contact_id]:
-                    contact_graph[contact_id].append(neighbor_id)
-                    contact_graph[neighbor_id].append(contact_id)  # Ensure bidirectional connection
+                if neighbor_id in friendship_graph:
+                    if neighbor_id not in friendship_graph[contact_id]:
+                        friendship_graph[contact_id].append(neighbor_id)
+                    if contact_id not in friendship_graph[neighbor_id]:
+                        friendship_graph[neighbor_id].append(contact_id)
 
 # END: Session 22: Graph
 
@@ -755,7 +762,7 @@ def rebuild_all_structures():
     rebuild_category_bst()  # Rebuild category BST for organized display
     rebuild_category_tree()  # Rebuild category tree for organized display
     rebuild_emergency_queue()  # Rebuild emergency priority queue for emergency contact management
-    rebuild_contact_graph()  # Session 22: Rebuild graph structure
+    rebuild_friendship_graph()  # Session 22: Rebuild friendship graph structure
 
 rebuild_all_structures()  # Initial build of all structures based on the initial contacts
 
@@ -974,8 +981,8 @@ def add_contact():
     next_id += 1
     contacts.append(new_contact)
 
-    if new_contact["id"] not in contact_graph:
-        contact_graph[new_contact["id"]] = []  # Ensure new contact is added to the graph structure for Session 22, even if they have no connections yet
+    if new_contact["id"] not in friendship_graph:
+        friendship_graph[new_contact["id"]] = []  # Ensure new contact is added to the graph structure for Session 22, even if they have no connections yet
 
     added_contacts_stack.push(copy.deepcopy(new_contact))
     actions_stack.push("A")
