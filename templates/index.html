@@ -159,20 +159,22 @@
 
                     <!-- Session 22: Graph Connection Display -->
                      <div class="graph-box">
-                        <h3>Manage Contact Connections (Graph)</h3>
+                        <h3>Manage Friendships (Adjacency List)</h3>
 
                         <form action="/add_connection" method="POST">
                             <input type="number" name="id1" placeholder="Contact ID 1" required>
                             <input type="number" name="id2" placeholder="Contact ID 2" required>
-                            <button type="submit">Add Connection</button>
+                            <button type="submit">Add Friendship</button>
                         </form>
 
                         <form action="/remove_connection" method="POST">
                             <input type="number" name="id1" placeholder="Contact ID 1" required>
                             <input type="number" name="id2" placeholder="Contact ID 2" required>
-                            <button type="submit">Remove Connection</button>
+                            <button type="submit">Remove Friendship</button>
 
         </div>
+
+    </div>
 
         <hr>
 
@@ -232,9 +234,9 @@
             <em>Emergency Priority: {{ contact.get("emergency_priority", "N/A") }}</em>
 
             <br><br>
-            <strong>Connections:</strong>
+            <strong>Friendships:</strong>
             <ul>
-                {% if graph_view.get(contact.get("id")) %}
+                {% if graph_view.get(contact.get("id"), []) %}
                     {% for connected in graph_view.get(contact.get("id"), []) %}
                         <li>
                             {{ connected.get("name", "N/A") }} -
@@ -242,7 +244,7 @@
                         </li>
                     {% endfor %}
                 {% else %}
-                    <li>No connections</li>
+                    <li>No friendships</li>
                 {% endif %}
             </ul>
 
@@ -258,7 +260,7 @@
     <hr>
 
         <div class="graph-box">
-            <h3>Graph Connections Overview</h3>
+            <h3>Friendship Overview</h3>
             {% if contacts %}
                 {% for contact in contacts %}
                 <div class="card">
@@ -273,7 +275,7 @@
                                 </li>
                             {% endfor %}
                         {% else %}
-                            <li>No connections</li>
+                            <li>No friendships</li>
                         {% endif %}
                     </ul>
                 </div>
@@ -328,7 +330,7 @@
 
     <hr>
 
-    <! --- Session 16: BST Display --->
+    <!-- Session 16: BST Display -->
     <div class="bst-box">
         <h3>Binary Search Tree Categories (In-Order Traversal)</h3>
         {% if bst_categories and bst_categories|length > 0 %}
