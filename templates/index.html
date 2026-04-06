@@ -171,7 +171,15 @@
                             <input type="number" name="id1" placeholder="Contact ID 1" required>
                             <input type="number" name="id2" placeholder="Contact ID 2" required>
                             <button type="submit">Remove Friendship</button>
+                        </form>
 
+                        <h4>Find Degrees of Separation (BFS)</h4>
+                        <p>Enter two contact IDs to find the shortest friendship path between them</p>
+                        <form action="/find_connection" method="POST">
+                            <input type="number" name="id1" placeholder="Starting Contact ID" required>
+                            <input type="number" name="id2" placeholder="Target Contact ID" required>
+                            <button type="submit">Find Connection</button>
+                        </form>
         </div>
 
     </div>
